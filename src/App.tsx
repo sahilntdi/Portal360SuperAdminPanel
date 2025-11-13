@@ -11,6 +11,7 @@ import Users from "./pages/Users";
 import Subscriptions from "./pages/Subscriptions";
 import Pricing from "./pages/Pricing";
 import Features from "./pages/Features";
+import WebsiteContent from "./pages/WebsiteContent";
 import HelpSupport from "./pages/HelpSupport";
 import Analytics from "./pages/Analytics";
 import Security from "./pages/Security";
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="subscriptions" element={<Subscriptions />} />
               <Route path="pricing" element={<Pricing />} />
               <Route path="features" element={<Features />} />
+              <Route path="website-content" element={<WebsiteContent />} />
               <Route path="help" element={<HelpSupport />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="security" element={<Security />} />

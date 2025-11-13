@@ -1,11 +1,13 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { DiscountHeader } from "@/components/DiscountHeader";
 import { Outlet } from "react-router-dom";
 
 export function AppLayout() {
   return (
     <SidebarProvider>
+      <DiscountHeader />
       <div className="flex min-h-screen w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">

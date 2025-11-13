@@ -1,4 +1,4 @@
-import { LayoutDashboard, Building2, Users, CreditCard, DollarSign, Puzzle, HelpCircle, BarChart3, Shield, Mail, Bot, FileCheck } from "lucide-react";
+import { LayoutDashboard, Building2, Users, CreditCard, DollarSign, Puzzle, HelpCircle, BarChart3, Shield, Mail, Bot, FileCheck, Globe } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import {
   Sidebar,
@@ -20,6 +20,7 @@ const menuItems = [
   { title: "Subscriptions", url: "/subscriptions", icon: CreditCard, end: false },
   { title: "Pricing", url: "/pricing", icon: DollarSign, end: false },
   { title: "Features", url: "/features", icon: Puzzle, end: false },
+  { title: "Website Content", url: "/website-content", icon: Globe, end: false },
   { title: "Help & Support", url: "/help", icon: HelpCircle, end: false },
   { title: "Analytics", url: "/analytics", icon: BarChart3, end: false },
   { title: "Security", url: "/security", icon: Shield, end: false },
