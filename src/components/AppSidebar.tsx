@@ -109,7 +109,7 @@ export function AppSidebar() {
                 transition={{ duration: 0.2 }}
               >
                 <h2 className="font-semibold text-base leading-tight">Portal 360</h2>
-                <p className="text-sm text-sidebar-foreground/60">Superadmin</p>
+                <p className="text-sm text-sidebar-foreground/60">SaasAdmin</p>
               </motion.div>
             )}
           </AnimatePresence>
