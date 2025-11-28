@@ -7,18 +7,29 @@ import { Outlet } from "react-router-dom";
 export function AppLayout() {
   return (
     <SidebarProvider>
-      <DiscountHeader />
-      <div className="flex min-h-screen w-full">
-        <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6 shrink-0">
-            <SidebarTrigger />
-            <div className="flex-1" />
-            <ThemeToggle />
-          </header>
-          <main className="flex-1 p-6 bg-background overflow-x-auto">
-            <Outlet />
-          </main>
+      <div className="flex flex-col min-h-screen w-full">
+
+        {/* TOP BANNER (Optional) */}
+        <DiscountHeader />
+
+        <div className="flex flex-1 w-full">
+          <AppSidebar />
+
+          {/* MAIN AREA */}
+          <div className="flex-1 min-w-0 relative">
+
+            {/* HEADER (same height as sidebar header) */}
+            <header className="h-14 flex items-center gap-4 border-b bg-background px-6 sticky top-0 z-10">
+              {/* <SidebarTrigger /> */}
+              <div className="flex-1" />
+              <ThemeToggle />
+            </header>
+
+            {/* MAIN PAGE CONTENT */}
+            <main className="p-6 overflow-x-auto bg-background h-[calc(100vh-56px-40px)]">
+              <Outlet />
+            </main>
+          </div>
         </div>
       </div>
     </SidebarProvider>
