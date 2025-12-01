@@ -8,5 +8,5 @@ export const loginUser = async (credentials) => {
   };
 
   const res = await postRequest("auth/logins", payload);
-  return res.data; // important
+  return res.data; 
 };
