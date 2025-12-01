@@ -14,7 +14,8 @@ import {
   FileCheck,
   Globe,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut,
 } from "lucide-react";
 
 import { NavLink, useLocation } from "react-router-dom";
@@ -31,8 +32,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
-  useSidebar
+  useSidebar,
 } from "@/components/ui/sidebar";
+
+import { useAppSelector, useAppDispatch } from "@/store/hooks";
+import { logout } from "@/store/slices/authSlice";
 
 // MENU ITEMS
 const menuItems = [
@@ -48,7 +52,7 @@ const menuItems = [
   { title: "Security", url: "/security", icon: Shield },
   { title: "Email Triggers", url: "/email-triggers", icon: Mail },
   { title: "AI & Automation", url: "/ai-automation", icon: Bot },
-  { title: "Compliance", url: "/compliance", icon: FileCheck }
+  { title: "Compliance", url: "/compliance", icon: FileCheck },
 ];
 
 // ACTIVE + COLLAPSED ALIGNMENT FIX
@@ -62,6 +66,9 @@ const getNavCls = (active: boolean, collapsed: boolean) =>
   );
 
 export function AppSidebar() {
+  const { user } = useAppSelector((state) => state.auth);
+  const dispatch = useAppDispatch();
+
   const { open, toggleSidebar } = useSidebar();
   const collapsed = !open;
   const { pathname } = useLocation();
@@ -73,7 +80,7 @@ export function AppSidebar() {
         width: collapsed ? 72 : 256,
         transition: {
           duration: 0.28,
-          ease: [0.22, 1, 0.36, 1], // buttery smooth easing
+          ease: [0.22, 1, 0.36, 1],
         },
       }}
       style={{ willChange: "width" }}
@@ -108,8 +115,12 @@ export function AppSidebar() {
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <h2 className="font-semibold text-base leading-tight">Portal 360</h2>
-                <p className="text-sm text-sidebar-foreground/60">SaasAdmin</p>
+                <h2 className="font-semibold text-base leading-tight">
+                  Portal 360
+                </h2>
+                <p className="text-sm text-sidebar-foreground/60">
+                  SaasAdmin
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -117,11 +128,12 @@ export function AppSidebar() {
       </SidebarHeader>
 
       {/* MENU */}
-      <Sidebar collapsible="none" className="!w-full !max-w-full h-full overflow-hidden transition-none">
+      <Sidebar
+        collapsible="none"
+        className="!w-full !max-w-full h-full overflow-hidden transition-none"
+      >
         <SidebarContent>
           <SidebarGroup>
-
-            {/* Animated Group Label */}
             <AnimatePresence>
               {!collapsed && (
                 <SidebarGroupLabel>
@@ -139,7 +151,6 @@ export function AppSidebar() {
 
             <SidebarGroupContent>
               <SidebarMenu>
-
                 {menuItems.map((item) => {
                   const isActive =
                     item.end ? pathname === item.url : pathname.startsWith(item.url);
@@ -172,12 +183,63 @@ export function AppSidebar() {
                     </SidebarMenuItem>
                   );
                 })}
-
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
       </Sidebar>
+
+      {/* ================================================================= */}
+      {/*                    USER SECTION (BOTTOM FIXED)                    */}
+      {/* ================================================================= */}
+
+      {/* ================= USER SECTION ================= */}
+      <motion.div
+        initial={false}
+        animate={{
+          height: collapsed ? 60 : 70,
+          transition: { duration: 0.25 },
+        }}
+        className="border-t border-sidebar-accent/20 px-3 py-2 flex items-center cursor-pointer group"
+        onClick={() => {
+          dispatch(logout());
+          window.location.href = "/auth";
+        }}
+      >
+        {/* Avatar */}
+        <div className="h-10 w-10 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center">
+          <span className="text-primary font-semibold text-sm">
+            {user?.firstName?.[0] || "U"}
+          </span>
+        </div>
+
+        {/* USER INFO */}
+        <AnimatePresence>
+          {!collapsed && (
+            <motion.div
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -6 }}
+              transition={{ duration: 0.2 }}
+              className="flex-1 flex flex-col ml-3 leading-tight overflow-hidden"
+            >
+              <span className="font-medium text-[13px] truncate">
+                {user ? `${user.firstName} ${user.lastName}` : "User"}
+              </span>
+
+              <span className="text-xs text-sidebar-foreground/60 truncate">
+                {user?.role || "Web Designer"}
+              </span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Logout Icon (Only when expanded) */}
+        {!collapsed && (
+          <LogOut className="h-4 w-4 text-sidebar-foreground/60 group-hover:text-red-500 transition" />
+        )}
+      </motion.div>
+
     </motion.div>
   );
 }
