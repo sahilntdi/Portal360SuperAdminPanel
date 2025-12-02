@@ -19,11 +19,15 @@ export function ModernTeamAddDialog({ open, onClose, onSubmit }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Add Modern Team Item</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Add Modern Team Feature</DialogTitle>
+        </DialogHeader>
 
         <ModernTeamForm formData={formData} setFormData={setFormData} />
 
-        <Button className="mt-4 w-full" onClick={handleSubmit}>Add Item</Button>
+        <Button className="mt-4 w-full" onClick={handleSubmit}>
+          Add Feature
+        </Button>
       </DialogContent>
     </Dialog>
   );

@@ -18,7 +18,9 @@ export function IntegrationAddDialog({ open, onClose, onSubmit }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Add Integration</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Add Integration</DialogTitle>
+        </DialogHeader>
 
         <IntegrationForm formData={formData} setFormData={setFormData} />
 

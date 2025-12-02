@@ -8,7 +8,7 @@ export function BlogAddDialog({ open, onClose, onSubmit }) {
     title: "",
     excerpt: "",
     content: "",
-    date: new Date().toISOString(),
+    date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
     readTime: "",
     category: "",
     image: "",
@@ -16,19 +16,27 @@ export function BlogAddDialog({ open, onClose, onSubmit }) {
   });
 
   const handleSubmit = () => {
-    onSubmit(formData);
+    // Convert date to ISO string
+    const dataToSubmit = {
+      ...formData,
+      date: new Date(formData.date).toISOString()
+    };
+    
+    onSubmit(dataToSubmit);
     onClose();
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Add Blog</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add Blog Post</DialogTitle>
+        </DialogHeader>
 
         <BlogForm formData={formData} setFormData={setFormData} />
 
         <Button className="mt-4 w-full" onClick={handleSubmit}>
-          Add Blog
+          Add Blog Post
         </Button>
       </DialogContent>
     </Dialog>

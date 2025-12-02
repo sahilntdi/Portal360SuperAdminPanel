@@ -33,7 +33,7 @@ const initialState: AuthState = {
 };
 
 export const login = createAsyncThunk(
-  "auth/login",
+  "auth/logins",
   async (
     credentials: { email: string; password: string },
     { rejectWithValue }

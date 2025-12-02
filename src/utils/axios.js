@@ -2,6 +2,8 @@ import axios from "axios";
 
 /* ---------------- COOKIE READER ---------------- */
 function getCookie(name) {
+  console.log("🍪 document.cookie:", document.cookie); // Debug
+
   let cookieValue = null;
   if (document.cookie !== "") {
     const cookies = document.cookie.split(";");
@@ -20,15 +22,15 @@ function getCookie(name) {
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 15000,
-  headers: {
-    "Content-Type": "application/json"
-  },
+  withCredentials: true, // REQUIRED for cookies
 });
 
 /* ---------------- REQUEST INTERCEPTOR ---------------- */
 instance.interceptors.request.use(
   (config) => {
     const token = getCookie("authToken");
+
+    console.log("🔑 Token from cookie:", token); // Debug
 
     // DEVICE ID
     const deviceId =
@@ -39,26 +41,17 @@ instance.interceptors.request.use(
     }
     config.headers["x-device-id"] = deviceId;
 
-    /* =====================
-       VERY IMPORTANT FIX
-       ===================== */
-
     if (config.method === "get") {
-      // GET MUST USE PUBLIC KEY
       config.headers["x-public-key"] = import.meta.env.VITE_SAAS_ADMIN_API_KEY;
-
-
-      // GET MUST NOT USE Authorization
       delete config.headers.Authorization;
     } else {
-      // POST/PUT/DELETE use Authorization token
       if (token) {
         config.headers.Authorization = token;
       }
-      // remove x-public-key for POST
       delete config.headers["x-public-key"];
     }
-    console.log("GET headers:", config.headers);
+
+    console.log("➡️ Final Headers:", config.headers); // Debug
 
     return config;
   },
@@ -69,11 +62,9 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Only logout if token is invalid AND request was not GET
-    if (
-      error.response?.status === 401 &&
-      error.config?.method !== "get"
-    ) {
+    console.log("❌ API ERROR:", error.response?.status, error.response?.data);
+
+    if (error.response?.status === 401 && error.config?.method !== "get") {
       document.cookie =
         "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       window.location.href = "/auth";
