@@ -1,4 +1,7 @@
+// hooks/usePricingPlans.ts
+
 import { useState, useEffect } from "react";
+import instance from "@/utils/axios";
 
 export interface PricingPlan {
   _id: string;
@@ -6,13 +9,18 @@ export interface PricingPlan {
   price: number;
   period: string;
   description: string;
-  features: string[];
+  features: Array<string | { name: string; value: any }>; // ← isko thoda flexible banaya
   highlighted?: boolean;
   isActive: boolean;
   order: number;
   recommendedFor?: string | number;
   planId?: string;
   stripePriceId?: string;
+}
+
+interface PricingResponse {
+  success: boolean;
+  data: PricingPlan[];
 }
 
 interface UsePricingPlansReturn {
@@ -32,44 +40,22 @@ export function usePricingPlans(): UsePricingPlansReturn {
       setLoading(true);
       setError(null);
 
-      const baseUrl = import.meta.env.VITE_API_BASE_URL;
-      const token = localStorage.getItem("token") || import.meta.env.VITE_BEARER_TOKEN;
+      const response = await instance.get<PricingResponse>("/pricing");
 
-      if (!baseUrl) {
-        throw new Error("API base URL not found in .env");
-      }
-
-      if (!token) {
-        throw new Error("token not found");
-      }
-
-      const res = await fetch(`${baseUrl}/pricing`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-
-      if (!res.ok) {
-        const errMsg = await res.text();
-        throw new Error(errMsg || "Failed to fetch pricing plans");
-      }
-
-      const json = await res.json();
-
-      if (json.success && Array.isArray(json.data)) {
-        const activePlans = json.data
+      // ← YEH SAHI HAI: response.data.data (sirf do baar .data)
+      if (response.data.success && Array.isArray(response.data.data)) {
+        const activePlans = response.data.data  // ← SIRF YAHAN TAK!
           .filter((p: PricingPlan) => p.isActive)
           .sort((a: PricingPlan, b: PricingPlan) => (a.order || 0) - (b.order || 0));
 
         setPlans(activePlans);
       } else {
-        throw new Error("Invalid API response");
+        throw new Error("Invalid response from server");
       }
     } catch (err: any) {
-      setError(err.message);
-      console.error("Pricing API Error:", err);
+      const message = err.response?.data?.message || err.message || "Failed to fetch pricing plans";
+      setError(message);
+      console.error("Pricing Plans API Error:", err);
     } finally {
       setLoading(false);
     }

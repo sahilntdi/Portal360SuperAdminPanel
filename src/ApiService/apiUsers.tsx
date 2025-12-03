@@ -1,4 +1,6 @@
+// hooks/useUsers.ts
 import { useState, useEffect } from "react";
+import instance from "@/utils/axios"; 
 
 export interface User {
   _id: string;
@@ -48,41 +50,19 @@ export function useUsers(): UseUsersReturn {
       setLoading(true);
       setError(null);
 
-      const baseUrl = import.meta.env.VITE_API_BASE_URLs;
-      const token = localStorage.getItem("token") || import.meta.env.VITE_BEARER_TOKEN;
+      const response = await instance.get<UsersResponse>("/user"); 
 
-      if (!baseUrl) {
-        throw new Error("API URL not configured");
-      }
-
-      if (!token) {
-        throw new Error("token not found");
-      }
-
-      const res = await fetch(`${baseUrl}/user`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      });
-
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err || "Failed to fetch users");
-      }
-
-      const json: UsersResponse = await res.json();
-
-      if (json.success && json.data?.users) {
-        setUsers(json.data.users);
-        setTotal(json.data.pagination.total);
+      if (response.data.success && response.data.data?.users) {
+        setUsers(response.data.data.users);
+        setTotal(response.data.data.pagination.total);
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (err: any) {
-      setError(err.message);
+      const message = err.response?.data?.message || err.message || "Failed to fetch users";
+      setError(message);
       console.error("Users API Error:", err);
+
     } finally {
       setLoading(false);
     }

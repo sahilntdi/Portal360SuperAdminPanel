@@ -129,13 +129,21 @@ export default function Pricing() {
                       <span className="text-muted-foreground">—</span>
                     )}
                   </TableCell>
+                  {/* Features column mein yeh daal do */}
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {plan.features.slice(0, 3).map((f, i) => (
-                        <Badge key={i} variant="outline" className="text-xs">
-                          {f}
-                        </Badge>
-                      ))}
+                      {plan.features.slice(0, 3).map((feature, i) => {
+                        const text = typeof feature === "string"
+                          ? feature
+                          : feature?.name
+                            ? `${feature.name}: ${feature.value}`
+                            : "—";
+                        return (
+                          <Badge key={i} variant="outline" className="text-xs">
+                            {text}
+                          </Badge>
+                        );
+                      })}
                       {plan.features.length > 3 && (
                         <Badge variant="outline" className="text-xs">
                           +{plan.features.length - 3} more

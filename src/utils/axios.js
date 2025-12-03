@@ -1,9 +1,7 @@
 import axios from "axios";
 
-/* ---------------- COOKIE READER ---------------- */
+/* ====== READ COOKIE FUNCTION ====== */
 function getCookie(name) {
-  console.log("🍪 document.cookie:", document.cookie); // Debug
-
   let cookieValue = null;
   if (document.cookie !== "") {
     const cookies = document.cookie.split(";");
@@ -18,53 +16,48 @@ function getCookie(name) {
   return cookieValue;
 }
 
-/* ---------------- AXIOS INSTANCE ---------------- */
+/* ====== AXIOS INSTANCE ====== */
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 15000,
-  withCredentials: true, // REQUIRED for cookies
+  withCredentials: true,
 });
 
-/* ---------------- REQUEST INTERCEPTOR ---------------- */
-instance.interceptors.request.use(
-  (config) => {
-    const token = getCookie("authToken");
+/* ===== REQUEST INTERCEPTOR ===== */
+instance.interceptors.request.use((config) => {
+  const token = getCookie("authToken");
 
-    console.log("🔑 Token from cookie:", token); // Debug
+  console.log("🍪 Cookie Read:", document.cookie);
+  console.log("🔑 Token:", token);
 
-    // DEVICE ID
-    const deviceId =
-      localStorage.getItem("deviceId") ||
-      `device_${Math.random().toString(36).slice(2, 9)}_${Date.now()}`;
-    if (!localStorage.getItem("deviceId")) {
-      localStorage.setItem("deviceId", deviceId);
-    }
-    config.headers["x-device-id"] = deviceId;
+  // device-id
+  const deviceId =
+    localStorage.getItem("deviceId") ||
+    `device_${Math.random().toString(36).slice(2, 9)}_${Date.now()}`;
 
-    if (config.method === "get") {
-      config.headers["x-public-key"] = import.meta.env.VITE_SAAS_ADMIN_API_KEY;
-      delete config.headers.Authorization;
-    } else {
-      if (token) {
-        config.headers.Authorization = token;
-      }
-      delete config.headers["x-public-key"];
-    }
+  localStorage.setItem("deviceId", deviceId);
+  config.headers["x-device-id"] = deviceId;
 
-    console.log("➡️ Final Headers:", config.headers); // Debug
+  // ✨ ALWAYS SEND TOKEN
+  if (token) config.headers.Authorization = `Bearer ${token}`;
 
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+  // GET me bhi x-public-key bhejni hai
+  if (config.method === "get") {
+    config.headers["x-public-key"] = import.meta.env.VITE_SAAS_ADMIN_API_KEY;
+  }
 
-/* ---------------- RESPONSE INTERCEPTOR ---------------- */
+  return config;
+});
+
+/* ===== RESPONSE INTERCEPTOR ===== */
 instance.interceptors.response.use(
-  (response) => response,
+  (res) => res,
   (error) => {
-    console.log("❌ API ERROR:", error.response?.status, error.response?.data);
+    const status = error.response?.status;
 
-    if (error.response?.status === 401 && error.config?.method !== "get") {
+    console.log("❌ API ERROR:", status);
+
+    if (status === 401) {
       document.cookie =
         "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       window.location.href = "/auth";
