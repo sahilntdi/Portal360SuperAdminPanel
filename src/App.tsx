@@ -1,3 +1,4 @@
+// App.tsx - UPDATED PROTECTED LAYOUT
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,9 +26,17 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Improved cookie getter
+const getAuthToken = () => {
+  const cookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('authToken='));
+  return cookie ? cookie.split('=')[1] : null;
+};
+
 // Layout wrapper for protected routes
 const ProtectedLayout = () => {
-  const token = document.cookie.split('; ').find(row => row.startsWith('authToken='));
+  const token = getAuthToken();
   
   if (!token) {
     return <Navigate to="/auth" replace />;
@@ -41,7 +50,6 @@ const ProtectedLayout = () => {
 };
 
 const App = () => (
-  
   <Provider store={store}>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="portal-theme">

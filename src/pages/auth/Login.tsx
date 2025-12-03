@@ -1,3 +1,4 @@
+// Login.tsx - UPDATED
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
@@ -14,6 +15,7 @@ import {
 } from "../../components/ui/card";
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -25,12 +27,16 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if already logged in
     const token = document.cookie
       .split("; ")
       .find((row) => row.startsWith("authToken="));
 
-    if (token) navigate("/dashboard", { replace: true });
-  }, []);
+    if (token) {
+      console.log("Already logged in, redirecting...");
+      navigate("/dashboard", { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     dispatch(clearError());
@@ -38,16 +44,29 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error("Please enter both email and password");
+      return;
+    }
 
-    const result = await dispatch(login({ email, password })).unwrap();
-
-    if (result?.token) {
-      navigate("/dashboard", { replace: true });
+    try {
+      const result = await dispatch(login({ email, password })).unwrap();
+      
+      if (result?.token) {
+        toast.success("Login successful!");
+        navigate("/dashboard", { replace: true });
+      } else {
+        toast.error("Login failed: No token received");
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast.error(error || "Login failed. Please check your credentials.");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Sign In</CardTitle>
@@ -61,9 +80,12 @@ const Login: React.FC = () => {
             <div>
               <Label>Email</Label>
               <Input
+                type="email"
+                placeholder="Enter your email"
                 disabled={isLoading}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                required
               />
             </div>
 
@@ -71,9 +93,11 @@ const Login: React.FC = () => {
               <Label>Password</Label>
               <Input
                 type="password"
+                placeholder="Enter your password"
                 disabled={isLoading}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
 
@@ -83,7 +107,7 @@ const Login: React.FC = () => {
               </Alert>
             )}
 
-            <Button disabled={isLoading} className="w-full">
+            <Button type="submit" disabled={isLoading} className="w-full">
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -94,17 +118,24 @@ const Login: React.FC = () => {
               )}
             </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full mt-2"
-              onClick={() => {
-                setEmail("admin@example.com");
-                setPassword("admin123");
-              }}
-            >
-              Use Test Credentials
-            </Button>
+            {/* Debug button - remove in production */}
+            {import.meta.env.DEV && (
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    setEmail("admin@example.com");
+                    setPassword("admin123");
+                  }}
+                >
+                  Use Test Credentials
+                </Button>
+                
+             
+              </div>
+            )}
           </form>
         </CardContent>
       </Card>
