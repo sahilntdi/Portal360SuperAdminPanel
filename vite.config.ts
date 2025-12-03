@@ -4,20 +4,14 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  build: {
+    build: {
     outDir: 'build',
   },
-  plugins: [react()],
   server: {
+    host: "::",
     port: 8080,
-    proxy: {
-      '/api': {
-        target: 'https://sassadminbackend-edfufwaphsh3ghar.australiaeast-01.azurewebsites.net',
-        changeOrigin: true,
-        secure: false,
-      }
-    }
   },
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

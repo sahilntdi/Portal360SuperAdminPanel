@@ -1,0 +1,19 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": [
+      "/assets/*",
+      "/play/assets/*",
+      "/Details/assets/*",
+      "/static/*",
+      "/favicon.ico",
+      "/manifest.json",
+      "/*.js",
+      "/*.css"
+    ]
+  },
+  "mimeTypes": {
+    ".js": "application/javascript",
+    ".css": "text/css"
+  }
+}
