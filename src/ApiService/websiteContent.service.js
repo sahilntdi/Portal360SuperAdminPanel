@@ -45,36 +45,51 @@ export const WebsiteContentService = {
 
 
 
-  /* -------------------- INTEGRATIONS -------------------- */
-  getIntegrations: () => instance.get("integrations"),
+/* -------------------- INTEGRATIONS -------------------- */
+getIntegrations: () => instance.get("integrations"),
 
-  addIntegration: (payload) => {
+addIntegration: (payload) => {
+  // Check if payload has File object (form upload)
+  if (payload.logo instanceof File) {
     const formData = new FormData();
-
     formData.append("name", payload.name);
     formData.append("order", payload.order);
-
-    // File optional
-    if (payload.image) formData.append("image", payload.image);
-
+    formData.append("logo", payload.logo); // 'logo' field for file upload
+    
     return instance.post("integrations", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-  },
+  } else {
+    // Regular JSON payload for logo URL
+    return instance.post("integrations", {
+      name: payload.name,
+      order: payload.order,
+      logoUrl: payload.logoUrl || payload.logo // Backend expects 'logoUrl'
+    });
+  }
+},
 
-  updateIntegration: (id, payload) => {
+updateIntegration: (id, payload) => {
+  // Check if payload has File object (form upload)
+  if (payload.logo instanceof File) {
     const formData = new FormData();
-
     formData.append("name", payload.name);
     formData.append("order", payload.order);
-
-    if (payload.image) formData.append("image", payload.image);
-
-    return instance.post(`integrations/${id}?_method=PUT`, formData, {
+    formData.append("logo", payload.logo); // 'logo' field for file upload
+    
+    return instance.put(`integrations/${id}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-  },
+  } else {
+    // Regular JSON payload for logo URL
+    return instance.put(`integrations/${id}`, {
+      name: payload.name,
+      order: payload.order,
+      logoUrl: payload.logoUrl || payload.logo // Backend expects 'logoUrl'
+    });
+  }
+},
 
-  deleteIntegration: (id) => instance.delete(`integrations/${id}`),
+deleteIntegration: (id) => instance.delete(`integrations/${id}`),
 
 };

@@ -23,6 +23,7 @@ const instance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 15000,
   withCredentials: true, // REQUIRED for cookies
+  
 });
 
 /* ---------------- REQUEST INTERCEPTOR ---------------- */
