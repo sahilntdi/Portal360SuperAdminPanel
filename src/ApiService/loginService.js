@@ -7,6 +7,6 @@ export const loginUser = async (credentials) => {
     deviceId: credentials.deviceId,
   };
 
-  const res = await postRequest("auth/logins", payload);
+  const res = await postRequest("auth/login", payload);
   return res.data; 
 };
