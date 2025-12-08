@@ -298,7 +298,6 @@ export default function WebsiteContentPage() {
     }
   };
 
-  // Testimonial Handlers
   // Testimonial Handlers - Add this console logging for debugging
   const handleAddTestimonial = async (data) => {
     try {
@@ -351,7 +350,6 @@ export default function WebsiteContentPage() {
     }
   };
 
-  // Blog Handlers
   // Blog Handlers - Add console logging for debugging
   const handleAddBlog = async (data) => {
     try {
@@ -405,7 +403,6 @@ export default function WebsiteContentPage() {
   };
 
   // Modern Teams Handlers
-  // Modern Teams Handlers - Add console logging for debugging
   const handleAddModern = async (data) => {
     try {
       console.log("Adding modern team:", data);
@@ -502,38 +499,43 @@ export default function WebsiteContentPage() {
   };
 
   // Integration Handlers
-  // Integration Handlers - Special handling for file uploads
+  // Integration Handlers - Updated according to your data structure
+  // Integration Handlers - Fixed
   const handleAddIntegration = async (data) => {
     try {
-      console.log("Adding integration:", data);
+      console.log("Adding integration data:", data);
 
-      // Check if image is a File object
-      if (data.image instanceof File) {
-        // File upload - handle via FormData
-        const formData = new FormData();
-        formData.append("name", data.name);
-        formData.append("order", data.order);
-        formData.append("image", data.image);
+      // Prepare payload according to backend expectations
+      const payload = {
+        name: data.name,
+        order: Number(data.order) || 1
+      };
 
-        const response = await WebsiteContentService.addIntegration(formData);
-        console.log("Add integration response:", response);
-      } else {
-        // URL or no image
-        const response = await WebsiteContentService.addIntegration(data);
-        console.log("Add integration response:", response);
+      // Handle logo based on type
+      if (data.logo instanceof File) {
+        // File upload
+        payload.logo = data.logo;
+      } else if (data.logoUrl) {
+        // Logo URL
+        payload.logoUrl = data.logoUrl;
       }
+
+      console.log("Final payload for service:", payload);
+      const response = await WebsiteContentService.addIntegration(payload);
+      console.log("Add integration response:", response);
 
       toast.success("Integration added successfully");
       loadIntegrations();
     } catch (error) {
       console.error("Failed to add integration:", error);
-      toast.error("Failed to add integration");
+      toast.error(error.response?.data?.message || "Failed to add integration");
     }
   };
 
   const handleEditIntegration = async (data) => {
     try {
-      console.log("Editing integration:", data);
+      console.log("Editing integration data:", data);
+
       const integrationId = data._id;
       if (!integrationId) {
         console.error("No _id in integration data:", data);
@@ -541,34 +543,30 @@ export default function WebsiteContentPage() {
         return;
       }
 
-      // Check if image is a File object
-      if (data.image instanceof File) {
-        // File upload - handle via FormData
-        const formData = new FormData();
-        formData.append("name", data.name);
-        formData.append("order", data.order);
-        formData.append("image", data.image);
+      // Prepare payload
+      const payload = {
+        name: data.name,
+        order: Number(data.order) || 1
+      };
 
-        const response = await WebsiteContentService.updateIntegration(integrationId, formData);
-        console.log("Edit integration response:", response);
-      } else if (data.imageUrl) {
-        // Existing image URL
-        const response = await WebsiteContentService.updateIntegration(integrationId, {
-          ...data,
-          image: data.imageUrl
-        });
-        console.log("Edit integration response:", response);
-      } else {
-        // No image changes
-        const response = await WebsiteContentService.updateIntegration(integrationId, data);
-        console.log("Edit integration response:", response);
+      // Handle logo based on type
+      if (data.logo instanceof File) {
+        // File upload
+        payload.logo = data.logo;
+      } else if (data.logoUrl) {
+        // Logo URL
+        payload.logoUrl = data.logoUrl;
       }
+
+      console.log("Final payload for update:", payload);
+      const response = await WebsiteContentService.updateIntegration(integrationId, payload);
+      console.log("Edit integration response:", response);
 
       toast.success("Integration updated successfully");
       loadIntegrations();
     } catch (error) {
       console.error("Failed to update integration:", error);
-      toast.error("Failed to update integration");
+      toast.error(error.response?.data?.message || "Failed to update integration");
     }
   };
 
@@ -581,13 +579,27 @@ export default function WebsiteContentPage() {
         toast.error("Integration ID is required");
         return;
       }
+
       const response = await WebsiteContentService.deleteIntegration(integrationId);
       console.log("Delete integration response:", response);
+
       toast.success("Integration deleted successfully");
       loadIntegrations();
     } catch (error) {
       console.error("Failed to delete integration:", error);
-      toast.error("Failed to delete integration");
+      toast.error(error.response?.data?.message || "Failed to delete integration");
+    }
+  };
+
+  const handleToggleStatus = async (item) => {
+    try {
+      const newStatus = item.status === 'active' ? 'inactive' : 'active';
+      await WebsiteContentService.updateIntegration(item._id, { status: newStatus });
+      toast.success(`Integration ${newStatus === 'active' ? 'activated' : 'deactivated'}`);
+      loadIntegrations();
+    } catch (error) {
+      console.error("Failed to toggle status:", error);
+      toast.error("Failed to update status");
     }
   };
 
@@ -706,7 +718,7 @@ export default function WebsiteContentPage() {
           <div className="space-y-4">
             {integrations.map((item) => (
               <MobileIntegrationCard
-                key={item._id || item.id}
+                key={item._id}
                 item={item}
                 onEdit={() => { setSelectedIntegration(item); setEditIntegrationOpen(true); }}
                 onDelete={() => { setSelectedIntegration(item); setDeleteIntegrationOpen(true); }}
