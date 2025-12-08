@@ -10,5 +10,3 @@ export const loginUser = async (credentials) => {
   const res = await postRequest("auth/login", payload);
   return res.data; 
 };
-
-
