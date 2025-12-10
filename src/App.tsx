@@ -24,6 +24,7 @@ import AIAutomation from "./pages/AIAutomation";
 import Compliance from "./pages/Compliance";
 import NotFound from "./pages/NotFound";
 import WebsiteQuery from "./pages/WebsiteQuery";
+import OrganizationDetailView from "./components/OrganizationDetailView";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const App = () => (
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/organizations" element={<Organizations />} />
+                <Route path="/organizations/:id" element={<OrganizationDetailView />} />
                 <Route path="/users" element={<Users />} />
                 <Route path="/subscriptions" element={<Subscriptions />} />
                 <Route path="/pricing" element={<Pricing />} />

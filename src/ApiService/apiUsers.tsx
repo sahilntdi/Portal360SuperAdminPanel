@@ -1,6 +1,6 @@
-// hooks/useUsers.ts
 import { useState, useEffect } from "react";
-import instance from "@/utils/axios"; 
+import instance from "@/utils/axios";
+import { Organization } from "./apiOrganizations";
 
 export interface User {
   _id: string;
@@ -9,68 +9,95 @@ export interface User {
   email: string;
   role: {
     _id: string;
+    name?: string;
     permissions: string[];
   };
+  organization?: Organization;
   tenantId?: string;
-  stripeCustomerId?: string | null;
   isActive: boolean;
   createdAt: string;
-  updatedAt: string;
-}
-
-interface UsersResponse {
-  success: boolean;
-  data: {
-    users: User[];
-    pagination: {
-      page: number;
-      limit: number;
-      total: number;
-      pages: number;
-    };
-  };
 }
 
 interface UseUsersReturn {
   users: User[];
+  organizations: Organization[];
   loading: boolean;
+  orgLoading: boolean;
   error: string | null;
   refetch: () => void;
   total: number;
+  createUser: (data: any) => Promise<any>;
+  toggleUserStatus: (id: string, status: boolean) => Promise<any>;
 }
 
 export function useUsers(): UseUsersReturn {
   const [users, setUsers] = useState<User[]>([]);
-  const [total, setTotal] = useState(0);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
+  const [orgLoading, setOrgLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      setError(null);
-
-      const response = await instance.get<UsersResponse>("/user"); 
-
-      if (response.data.success && response.data.data?.users) {
-        setUsers(response.data.data.users);
-        setTotal(response.data.data.pagination.total);
-      } else {
-        throw new Error("Invalid response from server");
+      const res = await instance.get("/user");
+      if (res.data.success) {
+        setUsers(res.data.data.users);
       }
     } catch (err: any) {
-      const message = err.response?.data?.message || err.message || "Failed to fetch users";
-      setError(message);
-      console.error("Users API Error:", err);
-
+      setError(err.response?.data?.message || "Failed to load users");
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchOrgs = async () => {
+    try {
+      setOrgLoading(true);
+      const res = await instance.get("/organizations");
+      if (res.data.success) {
+        setOrganizations(res.data.data);
+      }
+    } catch (err) {
+      console.error("Failed to load organizations");
+    } finally {
+      setOrgLoading(false);
+    }
+  };
+
+  const createUser = async (payload: any) => {
+    try {
+      const res = await instance.post("/api/users", payload);
+      await fetchUsers();
+      return res.data;
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || "Failed to create user");
+    }
+  };
+
+  const toggleUserStatus = async (id: string, isActive: boolean) => {
+    try {
+      await instance.patch(`/user/${id}/status`, { isActive: !isActive });
+      await fetchUsers();
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || "Failed to update status");
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchOrgs();
   }, []);
 
-  return { users, loading, error, refetch: fetchUsers, total };
+  return {
+    users,
+    organizations,
+    loading,
+    orgLoading,
+    error,
+    refetch: fetchUsers,
+    total: users.length,
+    createUser,
+    toggleUserStatus,
+  };
 }

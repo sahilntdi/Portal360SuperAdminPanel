@@ -9,7 +9,7 @@ export interface PricingPlan {
   price: number;
   period: string;
   description: string;
-  features: Array<string | { name: string; value: any }>; // ← isko thoda flexible banaya
+  features: Array<string | { name: string; value: any }>;
   highlighted?: boolean;
   isActive: boolean;
   order: number;
