@@ -23,15 +23,100 @@ export const WebsiteContentService = {
 
   /* -------------------- BLOGS -------------------- */
   getBlogs: () => instance.get("blogs"),
-  addBlog: (payload) => instance.post("blogs", payload),
-  updateBlog: (id, payload) => instance.put(`blogs/${id}`, payload),
+
+  addBlog: (payload) => {
+    const clean = { ...payload };
+
+    // 🔥 HARD DELETE any id-related field
+    delete clean._id;
+    delete clean.id;
+    delete clean.__v;
+
+    if (clean.imageFile instanceof File) {
+      const formData = new FormData();
+
+      Object.keys(clean).forEach((key) => {
+        if (key !== "imageFile") {
+          formData.append(key, clean[key]);
+        }
+      });
+
+      formData.append("image", clean.imageFile);
+
+      return instance.post("blogs", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    }
+
+    return instance.post("blogs", clean);
+  },
+
+  updateBlog: (id, payload) => {
+    const clean = { ...payload };
+
+    delete clean._id;
+    delete clean.id;
+    delete clean.__v;
+
+    // If a new file was selected
+    if (clean.imageFile instanceof File) {
+      const formData = new FormData();
+
+      Object.keys(clean).forEach(key => {
+        if (key !== "imageFile") formData.append(key, clean[key]);
+      });
+
+      formData.append("image", clean.imageFile);
+
+      return instance.put(`blogs/${id}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+    }
+
+    // If no file → send normal JSON
+    return instance.put(`blogs/${id}`, clean);
+  },
+
+
   deleteBlog: (id) => instance.delete(`blogs/${id}`),
+
 
   /* -------------------- MODERN TEAMS -------------------- */
   getModernTeams: () => instance.get("modern-teams"),
-  addModernTeam: (payload) => instance.post("modern-teams", payload),
-  updateModernTeam: (id, payload) =>
-    instance.put(`modern-teams/${id}`, payload),
+  addModernTeam: (payload) => {
+    if (payload.imageFile instanceof File) {
+      const fd = new FormData();
+
+      fd.append("title", payload.title);
+      fd.append("description", payload.description);
+      fd.append("icon", payload.icon);
+      fd.append("image", payload.imageFile);
+
+      return instance.post("modern-teams", fd, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+    }
+
+    return instance.post("modern-teams", payload);
+  }
+  ,
+  updateModernTeam: (id, payload) => {
+    if (payload.imageFile instanceof File) {
+      const fd = new FormData();
+
+      fd.append("title", payload.title);
+      fd.append("description", payload.description);
+      fd.append("icon", payload.icon);
+      fd.append("image", payload.imageFile);
+
+      return instance.put(`modern-teams/${id}`, fd, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+    }
+
+    return instance.put(`modern-teams/${id}`, payload);
+  },
+
   deleteModernTeam: (id) => instance.delete(`modern-teams/${id}`),
 
   /* -------------------- SUPERADMIN CONTROLS -------------------- */
@@ -45,51 +130,33 @@ export const WebsiteContentService = {
 
 
 
-/* -------------------- INTEGRATIONS -------------------- */
-getIntegrations: () => instance.get("integrations"),
+  /* -------------------- INTEGRATIONS -------------------- */
+  getIntegrations: () => instance.get("integrations"),
 
-addIntegration: (payload) => {
-  // Check if payload has File object (form upload)
-  if (payload.logo instanceof File) {
-    const formData = new FormData();
-    formData.append("name", payload.name);
-    formData.append("order", payload.order);
-    formData.append("logo", payload.logo); // 'logo' field for file upload
-    
-    return instance.post("integrations", formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  } else {
-    // Regular JSON payload for logo URL
-    return instance.post("integrations", {
-      name: payload.name,
-      order: payload.order,
-      logoUrl: payload.logoUrl || payload.logo // Backend expects 'logoUrl'
-    });
-  }
-},
+  addIntegration: (payload) => {
+    if (payload instanceof FormData) {
+      return instance.post("integrations", payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    }
 
-updateIntegration: (id, payload) => {
-  // Check if payload has File object (form upload)
-  if (payload.logo instanceof File) {
-    const formData = new FormData();
-    formData.append("name", payload.name);
-    formData.append("order", payload.order);
-    formData.append("logo", payload.logo); // 'logo' field for file upload
-    
-    return instance.put(`integrations/${id}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-  } else {
-    // Regular JSON payload for logo URL
-    return instance.put(`integrations/${id}`, {
-      name: payload.name,
-      order: payload.order,
-      logoUrl: payload.logoUrl || payload.logo // Backend expects 'logoUrl'
-    });
-  }
-},
+    return instance.post("integrations", payload);
+  },
 
-deleteIntegration: (id) => instance.delete(`integrations/${id}`),
+  updateIntegration: (id, payload) => {
+    if (payload instanceof FormData) {
+      return instance.put(`integrations/${id}`, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+    }
+
+    return instance.put(`integrations/${id}`, payload);
+  },
+
+
+
+
+
+  deleteIntegration: (id) => instance.delete(`integrations/${id}`),
 
 };

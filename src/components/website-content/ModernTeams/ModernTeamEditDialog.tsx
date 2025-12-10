@@ -5,34 +5,28 @@ import { ModernTeamForm } from "./ModernTeamForm";
 
 export function ModernTeamEditDialog({ open, onClose, item, onSubmit }) {
   const [formData, setFormData] = useState({
+    _id: null,
     title: "",
     description: "",
     icon: "",
     image: "",
-    _id: null
+    imageFile: null,
   });
 
   useEffect(() => {
-    if (item) {
+    if (open && item) {
       setFormData({
+        _id: item._id,
         title: item.title || "",
         description: item.description || "",
         icon: item.icon || "",
         image: item.image || "",
-        // Preserve MongoDB _id
-        _id: item._id
+        imageFile: null,
       });
     }
-  }, [item]);
-
-  if (!item) return null;
+  }, [open, item]);
 
   const handleSave = () => {
-    if (!formData._id) {
-      console.error("No _id found in Modern Team data");
-      return;
-    }
-    
     onSubmit(formData);
     onClose();
   };

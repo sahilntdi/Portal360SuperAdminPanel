@@ -1,41 +1,43 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
-export function BlogForm({ formData, setFormData }) {
-  const handleChange = (field, value) => {
-    setFormData(prev => ({
+export function BlogForm({ formData, setFormData, preview, setPreview }) {
+  const handleChange = (field, value) =>
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
+  const handleImageUpload = (file) => {
+    if (!file) return;
+    const localURL = URL.createObjectURL(file);
+
+    setPreview(localURL);
+
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
+      imageFile: file,
+      image: "",
     }));
   };
 
-  // Format date for input field
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return new Date().toISOString().split('T')[0];
-    
-    try {
-      if (dateString.includes('T')) {
-        // Already in ISO format
-        return dateString.split('T')[0];
-      } else {
-        // Assume it's already in YYYY-MM-DD format
-        return dateString;
-      }
-    } catch (error) {
-      return new Date().toISOString().split('T')[0];
-    }
+  const removeImage = () => {
+    setPreview("");
+    setFormData((prev) => ({
+      ...prev,
+      imageFile: null,
+      image: "",
+    }));
   };
 
   return (
     <div className="space-y-4">
+
       <div>
         <Label>Title *</Label>
         <Input
-          value={formData.title || ""}
+          value={formData.title}
           onChange={(e) => handleChange("title", e.target.value)}
-          required
-          placeholder="Blog post title"
         />
       </div>
 
@@ -43,10 +45,8 @@ export function BlogForm({ formData, setFormData }) {
         <Label>Excerpt *</Label>
         <Textarea
           rows={2}
-          value={formData.excerpt || ""}
+          value={formData.excerpt}
           onChange={(e) => handleChange("excerpt", e.target.value)}
-          required
-          placeholder="Short description of the blog post"
         />
       </div>
 
@@ -54,10 +54,8 @@ export function BlogForm({ formData, setFormData }) {
         <Label>Content *</Label>
         <Textarea
           rows={6}
-          value={formData.content || ""}
+          value={formData.content}
           onChange={(e) => handleChange("content", e.target.value)}
-          required
-          placeholder="Blog content in markdown or plain text"
         />
       </div>
 
@@ -66,7 +64,7 @@ export function BlogForm({ formData, setFormData }) {
           <Label>Date</Label>
           <Input
             type="date"
-            value={formatDateForInput(formData.date)}
+            value={formData.date}
             onChange={(e) => handleChange("date", e.target.value)}
           />
         </div>
@@ -74,9 +72,8 @@ export function BlogForm({ formData, setFormData }) {
         <div>
           <Label>Read Time</Label>
           <Input
-            value={formData.readTime || ""}
+            value={formData.readTime}
             onChange={(e) => handleChange("readTime", e.target.value)}
-            placeholder="e.g., 5 min read"
           />
         </div>
       </div>
@@ -85,44 +82,45 @@ export function BlogForm({ formData, setFormData }) {
         <div>
           <Label>Category</Label>
           <Input
-            value={formData.category || ""}
+            value={formData.category}
             onChange={(e) => handleChange("category", e.target.value)}
-            placeholder="e.g., Technology, Business"
           />
         </div>
 
         <div>
-          <Label>Slug *</Label>
+          <Label>Slug</Label>
           <Input
-            value={formData.slug || ""}
-            onChange={(e) => handleChange("slug", e.target.value)}
-            required
-            placeholder="URL-friendly slug"
+            value={formData.slug}
+            onChange={(e) =>
+              handleChange("slug", e.target.value.toLowerCase().replace(/\s+/g, "-"))
+            }
           />
         </div>
       </div>
 
+      {/* IMAGE UPLOAD ONLY */}
       <div>
-        <Label>Image URL</Label>
+        <Label>Upload Image</Label>
         <Input
-          value={formData.image || ""}
-          onChange={(e) => handleChange("image", e.target.value)}
-          placeholder="https://example.com/image.jpg"
+          type="file"
+          accept="image/*"
+          onChange={(e) => handleImageUpload(e.target.files[0])}
         />
-        {formData.image && (
-          <div className="mt-2">
-            <img 
-              src={formData.image} 
-              alt="Preview" 
-              className="h-20 w-full object-cover rounded border"
-            />
-          </div>
-        )}
       </div>
 
-      {/* Hidden field for _id */}
-      {formData._id && (
-        <input type="hidden" value={formData._id} />
+      {preview && (
+        <div className="relative mt-3 inline-block">
+          <img src={preview} className="h-28 rounded border object-cover" />
+
+          <Button
+            size="icon"
+            variant="destructive"
+            className="absolute -top-2 -right-2 h-7 w-7 rounded-full"
+            onClick={removeImage}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       )}
     </div>
   );

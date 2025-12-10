@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { BlogForm } from "./BlogForm";
@@ -8,21 +8,39 @@ export function BlogAddDialog({ open, onClose, onSubmit }) {
     title: "",
     excerpt: "",
     content: "",
-    date: new Date().toISOString().split('T')[0], // YYYY-MM-DD format
+    date: new Date().toISOString().split("T")[0],
     readTime: "",
     category: "",
-    image: "",
     slug: "",
+    image: "",
+    imageFile: null,
   });
 
+  const [preview, setPreview] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        title: "",
+        excerpt: "",
+        content: "",
+        date: new Date().toISOString().split("T")[0],
+        readTime: "",
+        category: "",
+        slug: "",
+        image: "",
+        imageFile: null,
+      });
+      setPreview("");
+    }
+  }, [open]);
+
   const handleSubmit = () => {
-    // Convert date to ISO string
-    const dataToSubmit = {
+    const payload = {
       ...formData,
-      date: new Date(formData.date).toISOString()
+      date: new Date(formData.date).toISOString(),
     };
-    
-    onSubmit(dataToSubmit);
+    onSubmit(payload);
     onClose();
   };
 
@@ -33,10 +51,15 @@ export function BlogAddDialog({ open, onClose, onSubmit }) {
           <DialogTitle>Add Blog Post</DialogTitle>
         </DialogHeader>
 
-        <BlogForm formData={formData} setFormData={setFormData} />
+        <BlogForm
+          formData={formData}
+          setFormData={setFormData}
+          preview={preview}
+          setPreview={setPreview}
+        />
 
         <Button className="mt-4 w-full" onClick={handleSubmit}>
-          Add Blog Post
+          Add Blog
         </Button>
       </DialogContent>
     </Dialog>

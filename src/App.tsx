@@ -23,6 +23,7 @@ import EmailTriggers from "./pages/EmailTriggers";
 import AIAutomation from "./pages/AIAutomation";
 import Compliance from "./pages/Compliance";
 import NotFound from "./pages/NotFound";
+import WebsiteQuery from "./pages/WebsiteQuery";
 
 const queryClient = new QueryClient();
 
@@ -77,6 +78,7 @@ const App = () => (
                 <Route path="/email-triggers" element={<EmailTriggers />} />
                 <Route path="/ai-automation" element={<AIAutomation />} />
                 <Route path="/compliance" element={<Compliance />} />
+                <Route path="/website-queries" element={<WebsiteQuery />} />
               </Route>
               
               {/* Catch-all route */}

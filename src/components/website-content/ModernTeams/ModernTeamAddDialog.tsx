@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ModernTeamForm } from "./ModernTeamForm";
@@ -9,7 +9,20 @@ export function ModernTeamAddDialog({ open, onClose, onSubmit }) {
     description: "",
     icon: "",
     image: "",
+    imageFile: null,
   });
+
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        title: "",
+        description: "",
+        icon: "",
+        image: "",
+        imageFile: null,
+      });
+    }
+  }, [open]);
 
   const handleSubmit = () => {
     onSubmit(formData);

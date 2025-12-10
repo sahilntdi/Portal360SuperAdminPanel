@@ -367,13 +367,27 @@ export default function WebsiteContentPage() {
   const handleEditBlog = async (data) => {
     try {
       console.log("Editing blog:", data);
+
       const blogId = data._id;
       if (!blogId) {
         console.error("No _id in blog data:", data);
         toast.error("Blog ID is required");
         return;
       }
-      const response = await WebsiteContentService.updateBlog(blogId, data);
+
+      // 🧹 CLEAN PAYLOAD BEFORE SENDING
+      const cleanData = { ...data };
+      delete cleanData._id;
+      delete cleanData.__v;
+      delete cleanData.id;
+
+      // Fix date format
+      cleanData.date = new Date(cleanData.date).toISOString();
+
+      console.log("Final Clean Data before sending:", cleanData);
+
+      const response = await WebsiteContentService.updateBlog(blogId, cleanData);
+
       console.log("Edit blog response:", response);
       toast.success("Blog updated successfully");
       loadBlogs();
@@ -382,6 +396,7 @@ export default function WebsiteContentPage() {
       toast.error("Failed to update blog");
     }
   };
+
 
   const handleDeleteBlog = async (item) => {
     try {
@@ -498,77 +513,63 @@ export default function WebsiteContentPage() {
     }
   };
 
-  // Integration Handlers
-  // Integration Handlers - Updated according to your data structure
   // Integration Handlers - Fixed
   const handleAddIntegration = async (data) => {
     try {
-      console.log("Adding integration data:", data);
+      let payload;
 
-      // Prepare payload according to backend expectations
-      const payload = {
-        name: data.name,
-        order: Number(data.order) || 1
-      };
-
-      // Handle logo based on type
-      if (data.logo instanceof File) {
-        // File upload
-        payload.logo = data.logo;
-      } else if (data.logoUrl) {
-        // Logo URL
-        payload.logoUrl = data.logoUrl;
+      // If uploading file
+      if (data.logoFile) {
+        payload = new FormData();
+        payload.append("name", data.name);
+        payload.append("order", data.order);
+        payload.append("image", data.logoFile); // ✅ must be 'image'
+      }
+      // If using URL
+      else {
+        payload = {
+          name: data.name,
+          order: data.order,
+          logo: data.logoUrl   // ✅ must be 'logo'
+        };
       }
 
-      console.log("Final payload for service:", payload);
-      const response = await WebsiteContentService.addIntegration(payload);
-      console.log("Add integration response:", response);
+      await WebsiteContentService.addIntegration(payload);
 
-      toast.success("Integration added successfully");
+      toast.success("Integration added");
       loadIntegrations();
-    } catch (error) {
-      console.error("Failed to add integration:", error);
-      toast.error(error.response?.data?.message || "Failed to add integration");
+    } catch (err) {
+      toast.error("Failed to add integration");
     }
   };
+
 
   const handleEditIntegration = async (data) => {
     try {
-      console.log("Editing integration data:", data);
+      let payload;
 
-      const integrationId = data._id;
-      if (!integrationId) {
-        console.error("No _id in integration data:", data);
-        toast.error("Integration ID is required");
-        return;
+      if (data.logoFile) {
+        payload = new FormData();
+        payload.append("name", data.name);
+        payload.append("order", data.order);
+        payload.append("image", data.logoFile); // ✅ correct key
+      } else {
+        payload = {
+          name: data.name,
+          order: data.order,
+          logo: data.logoUrl  // ✅ correct key
+        };
       }
 
-      // Prepare payload
-      const payload = {
-        name: data.name,
-        order: Number(data.order) || 1
-      };
+      await WebsiteContentService.updateIntegration(data._id, payload);
 
-      // Handle logo based on type
-      if (data.logo instanceof File) {
-        // File upload
-        payload.logo = data.logo;
-      } else if (data.logoUrl) {
-        // Logo URL
-        payload.logoUrl = data.logoUrl;
-      }
-
-      console.log("Final payload for update:", payload);
-      const response = await WebsiteContentService.updateIntegration(integrationId, payload);
-      console.log("Edit integration response:", response);
-
-      toast.success("Integration updated successfully");
+      toast.success("Integration updated");
       loadIntegrations();
-    } catch (error) {
-      console.error("Failed to update integration:", error);
-      toast.error(error.response?.data?.message || "Failed to update integration");
+    } catch (err) {
+      toast.error("Failed to update integration");
     }
   };
+
 
   const handleDeleteIntegration = async (item) => {
     try {
@@ -1055,7 +1056,7 @@ export default function WebsiteContentPage() {
       <TestimonialDeleteDialog open={deleteTestimonialOpen} item={selectedTestimonial} onClose={() => setDeleteTestimonialOpen(false)} onSubmit={handleDeleteTestimonial} />
 
       <BlogAddDialog open={addBlogOpen} onClose={() => setAddBlogOpen(false)} onSubmit={handleAddBlog} />
-      <BlogEditDialog open={editBlogOpen} item={selectedBlog} onClose={() => setEditBlogOpen(false)} onSubmit={handleEditBlog} />
+      <BlogEditDialog open={editBlogOpen} item={selectedBlog} onClose={() => setEditBlogOpen(false)} onSubmit={handleEditBlog} data={selectedBlog} />
       <BlogDeleteDialog open={deleteBlogOpen} item={selectedBlog} onClose={() => setDeleteBlogOpen(false)} onSubmit={handleDeleteBlog} />
 
       <ModernTeamAddDialog open={addModernOpen} onClose={() => setAddModernOpen(false)} onSubmit={handleAddModern} />
