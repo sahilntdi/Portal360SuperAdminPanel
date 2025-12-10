@@ -4,10 +4,10 @@ import { Card } from "@/components/ui/card";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { 
-  Mail, 
-  Settings, 
-  CheckCircle, 
+import {
+  Mail,
+  Settings,
+  CheckCircle,
   AlertCircle,
   Clock,
   User,
@@ -84,26 +84,26 @@ const WebsiteQuery = () => {
   // Load Email Settings
   // -------------------------------
   const fetchEmailSettings = async () => {
-  try {
-    setLoadingEmail(true);
-    const res = await EmailSettingsService.getEmailSettings();
-    console.log("Email settings response:", res);
-    const email = res.email || res.data?.email || "";
-    console.log("Fetched email settings:", email);
-    setAdminEmail(email);
-    setCurrentEmail(email);
-  } catch {
-    toast({
-      title: "Error",
-      description: "Failed to load email settings",
-      variant: "destructive",
-    });
-  } finally {
-    setLoadingEmail(false);
-  }
+    try {
+      setLoadingEmail(true);
+      const res = await EmailSettingsService.getEmailSettings();
+      console.log("Email settings response:", res);
+      const email = res.email || res.data?.email || "";
+      console.log("Fetched email settings:", email);
+      setAdminEmail(email);
+      setCurrentEmail(email);
+    } catch {
+      toast({
+        title: "Error",
+        description: "Failed to load email settings",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingEmail(false);
+    }
 
 
-};
+  };
 
 
   // -------------------------------
@@ -211,9 +211,10 @@ const WebsiteQuery = () => {
           title="Contact Queries"
           description="Manage and respond to website contact submissions"
         />
-        
-        {/* Email Status & Settings Button */}
+
+        {/* Email Status, Sync & Settings Button */}
         <div className="flex items-center gap-4">
+          {/* Email Display */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -233,6 +234,30 @@ const WebsiteQuery = () => {
             </Tooltip>
           </TooltipProvider>
 
+          {/* SYNC BUTTON */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchQueries}
+            className="flex items-center gap-2"
+          >
+            <svg
+              className="w-4 h-4 animate-spin-on-hover"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 4v6h6M20 20v-6h-6M5.636 18.364A9 9 0 0118.364 5.636M18.364 18.364A9 9 0 015.636 5.636"
+              />
+            </svg>
+            Sync
+          </Button>
+
+          {/* SETTINGS BUTTON */}
           <Button
             variant="outline"
             size="sm"
@@ -244,6 +269,7 @@ const WebsiteQuery = () => {
           </Button>
         </div>
       </div>
+
 
       {/* STATS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -264,8 +290,8 @@ const WebsiteQuery = () => {
                 {queries.filter(q => {
                   const date = new Date(q.createdAt);
                   const now = new Date();
-                  return date.getMonth() === now.getMonth() && 
-                         date.getFullYear() === now.getFullYear();
+                  return date.getMonth() === now.getMonth() &&
+                    date.getFullYear() === now.getFullYear();
                 }).length}
               </p>
             </div>
@@ -304,7 +330,7 @@ const WebsiteQuery = () => {
       <Card className="p-6">
         <div className="max-h-[600px] overflow-y-auto rounded-lg border">
           <Table>
-            <TableHeader className="sticky top-0 bg-white z-10">
+            <TableHeader className="sticky top-0 bg-white z-50 shadow-sm">
               <TableRow>
                 <TableHead className="font-semibold">
                   <div className="flex items-center gap-2">
@@ -312,28 +338,34 @@ const WebsiteQuery = () => {
                     Contact
                   </div>
                 </TableHead>
+
                 <TableHead className="font-semibold">
                   <div className="flex items-center gap-2">
                     <Building className="w-4 h-4" />
                     Business
                   </div>
                 </TableHead>
+
                 <TableHead className="font-semibold">Email</TableHead>
+
                 <TableHead className="font-semibold">
                   <div className="flex items-center gap-2">
                     <MessageSquare className="w-4 h-4" />
                     Message
                   </div>
                 </TableHead>
+
                 <TableHead className="font-semibold">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4" />
                     Date
                   </div>
                 </TableHead>
+
                 <TableHead className="font-semibold text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
+
             <TableBody>
               {isLoading ? (
                 <QuerySkeleton />
@@ -509,8 +541,8 @@ const WebsiteQuery = () => {
             >
               Cancel
             </Button>
-            <Button 
-              onClick={saveEmailSettings} 
+            <Button
+              onClick={saveEmailSettings}
               disabled={isSaving || adminEmail === currentEmail || !adminEmail.trim()}
               className="gap-2"
             >
