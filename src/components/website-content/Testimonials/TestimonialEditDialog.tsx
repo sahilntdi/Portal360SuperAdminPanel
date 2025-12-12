@@ -12,6 +12,7 @@ export function TestimonialEditDialog({ open, onClose, item, onSubmit }) {
   const [formData, setFormData] = useState({
     name: "",
     role: "",
+    company: "",
     message: "",
     rating: 5,
     order: 1,
@@ -23,11 +24,11 @@ export function TestimonialEditDialog({ open, onClose, item, onSubmit }) {
     if (item) {
       setFormData({
         name: item.name || "",
-        role: item.role || "",
+        role: item.designation || "",
+        company: item.company || "",
         message: item.message || "",
         rating: item.rating || 5,
         order: item.order || 1,
-        // Preserve MongoDB _id
         _id: item._id
       });
     }

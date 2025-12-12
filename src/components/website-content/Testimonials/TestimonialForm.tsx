@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 export function TestimonialForm({ formData, setFormData }) {
+
   const handleChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -12,6 +13,7 @@ export function TestimonialForm({ formData, setFormData }) {
 
   return (
     <div className="space-y-4">
+
       <div>
         <Label>Name *</Label>
         <Input
@@ -25,10 +27,20 @@ export function TestimonialForm({ formData, setFormData }) {
       <div>
         <Label>Role/Designation *</Label>
         <Input
-          value={formData.role || ""}
-          onChange={(e) => handleChange("role", e.target.value)}
+          value={formData.designation || ""}
+          onChange={(e) => handleChange("designation", e.target.value)}
           required
-          placeholder="e.g., CEO at Company"
+          placeholder="e.g. CEO at Company"
+        />
+      </div>
+
+      <div>
+        <Label>Company *</Label>
+        <Input
+          value={formData.company || ""}
+          onChange={(e) => handleChange("company", e.target.value)}
+          required
+          placeholder="Company name"
         />
       </div>
 
@@ -39,9 +51,18 @@ export function TestimonialForm({ formData, setFormData }) {
           value={formData.message || ""}
           onChange={(e) => handleChange("message", e.target.value)}
           required
-          placeholder="What the customer said..."
+          placeholder="What customer said..."
         />
       </div>
+
+      {/* <div>
+        <Label>Image ID / URL (Optional)</Label>
+        <Input
+          value={formData.image || ""}
+          onChange={(e) => handleChange("image", e.target.value)}
+          placeholder="Paste image ID or URL"
+        />
+      </div> */}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -66,10 +87,7 @@ export function TestimonialForm({ formData, setFormData }) {
         </div>
       </div>
 
-      {/* Hidden field for _id */}
-      {formData._id && (
-        <input type="hidden" value={formData._id} />
-      )}
+      {formData._id && <input type="hidden" value={formData._id} />}
     </div>
   );
 }

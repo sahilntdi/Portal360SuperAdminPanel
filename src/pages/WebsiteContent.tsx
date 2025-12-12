@@ -84,7 +84,7 @@ import { MobileIntegrationCard } from "@/components/website-content/Integrations
 
 export default function WebsiteContentPage() {
   const [activeTab, setActiveTab] = useState("steps");
-  const [searchQuery, setSearchQuery] = useState("");
+  // const [searchQuery, setSearchQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [viewMode, setViewMode] = useState("table"); // "table" or "grid"
 
@@ -841,7 +841,7 @@ export default function WebsiteContentPage() {
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <div className="relative flex-1 sm:flex-none">
+                {/* <div className="relative flex-1 sm:flex-none">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search..."
@@ -849,7 +849,7 @@ export default function WebsiteContentPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-9 w-full sm:w-48 md:w-64 h-9 text-sm"
                   />
-                </div>
+                </div> */}
                 {!isMobile && (
                   <>
 

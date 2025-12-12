@@ -64,7 +64,7 @@ export function TestimonialTable({ items, onEdit, onDelete }) {
                       {t.name}
                     </div>
                     <Badge variant="outline" className="text-xs">
-                      {t.designation || t.role}
+                      {t.designation || t.designation || "N/A"}
                     </Badge>
                     {t.company && (
                       <div className="text-xs text-muted-foreground">
