@@ -5,7 +5,7 @@ import { FeatureForm } from "./FeatureForm";
 import { createFeature } from "@/ApiService/feature.service";
 import { useToast } from "@/hooks/use-toast";
 
-export function FeatureAddDialog({ open, onClose, onSuccess }) {
+function FeatureAddDialog({ open, onClose, onSuccess }) {
   const { toast } = useToast();
   const [payload, setPayload] = useState({});
 
@@ -13,7 +13,7 @@ export function FeatureAddDialog({ open, onClose, onSuccess }) {
     try {
       await createFeature(payload);
       toast({ title: "Feature Added", description: "New feature created successfully." });
-      onSuccess();
+      onSuccess?.();
       onClose();
     } catch (err) {
       toast({ variant: "destructive", title: "Error", description: err?.message || "Failed" });
@@ -36,3 +36,5 @@ export function FeatureAddDialog({ open, onClose, onSuccess }) {
     </Dialog>
   );
 }
+
+export default FeatureAddDialog;

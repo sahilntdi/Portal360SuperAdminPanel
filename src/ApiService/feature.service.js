@@ -4,7 +4,7 @@ import { getRequest, postRequest, putRequest, deleteRequest } from "./httpHelper
 export const getAllFeatures = () => {
   return getRequest("features");
 };
-
+export const getFeatures = getAllFeatures;
 // 📌 Create new feature
 export const createFeature = (payload) => {
   return postRequest("features", payload);

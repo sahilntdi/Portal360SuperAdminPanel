@@ -15,7 +15,8 @@ import {
   updateFeature,
 } from "@/ApiService/feature.service";
 
-import { FeatureAddDialog } from "@/components/features/FeatureAddDialog";
+import FeatureAddDialog from "@/components/features/FeatureAddDialog";
+
 import { FeatureEditDialog } from "@/components/features/FeatureEditDialog";
 import { FeatureDeleteDialog } from "@/components/features/FeatureDeleteDialog";
 
