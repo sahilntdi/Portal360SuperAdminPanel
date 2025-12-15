@@ -1,292 +1,280 @@
-"use client";
-
-import { useState } from "react";
-import { useUsers } from "@/ApiService/apiUsers";
-import { useOrganizations } from "@/ApiService/apiOrganizations";
-import { format } from "date-fns";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, Plus, MoreVertical, Loader2, RefreshCw } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/components/ui/use-toast";
+import { Plus, Users as UsersIcon, RefreshCw, Loader2 } from "lucide-react";
+import instance from "@/utils/axios";
+import { UserAddDialog } from "@/components/users/UserAddDialog";
+import { UserEditDialog } from "@/components/users/UserEditDialog";
+import { UserDeleteDialog } from "@/components/users/UserDeleteDialog";
+import { UserTable } from "@/components/users/UserTable";
+import { UserFilters } from "@/components/users/UserFilters";
+import type { User } from "@/ApiService/apiUsers";
 
-const getInitials = (first: string, last: string) => (first[0] + last[0]).toUpperCase();
+interface Organization {
+  _id: string;
+  businessName?: string;
+  email?: string;
+}
 
 export default function UsersPage() {
-  const { users, organizations, loading, orgLoading, error, refetch, createUser, toggleUserStatus } = useUsers();
-  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+  const [users, setUsers] = useState<User[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [orgLoading, setOrgLoading] = useState(true);
+  
+  // Dialog states
+  const [addOpen, setAddOpen] = useState(false);
+  const [editUser, setEditUser] = useState<User | null>(null);
+  const [deleteUser, setDeleteUser] = useState<User | null>(null);
+  
+  // Filter states
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
 
-  // Form state
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    role: "",
-    organization: "",
-  });
-
-  const filteredUsers = users.filter((u) =>
-    `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleCreate = async () => {
-    if (!form.organization) return alert("Please select an organization");
-
-    const payload = {
-      firstName: form.firstName,
-      lastName: form.lastName,
-      email: form.email,
-      password: form.password,
-      role: form.role,
-      organization: [form.organization], 
-    };
-
+  const fetchUsers = async () => {
     try {
-      await createUser(payload);
-      setOpen(false);
-      setForm({ firstName: "", lastName: "", email: "", password: "", role: "", organization: "" });
-      alert("User created successfully!");
-    } catch (err: any) {
-      alert(err.message);
+      setLoading(true);
+      const res = await instance.get("/user");
+      if (res.data.success) {
+        setUsers(res.data.data.users || []);
+      } else {
+        throw new Error("Failed to load users");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to load users",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
+  const fetchOrganizations = async () => {
+    try {
+      setOrgLoading(true);
+      const res = await instance.get("/organizations");
+      if (res.data.success) {
+        setOrganizations(res.data.data || []);
+      }
+    } catch (error) {
+      console.error("Failed to load organizations:", error);
+    } finally {
+      setOrgLoading(false);
+    }
+  };
+
+  const createUser = async (data: any) => {
+    try {
+      const res = await instance.post("/user", data);
+      if (res.data.success) {
+        await fetchUsers();
+        return res.data.data;
+      }
+      throw new Error("Failed to create user");
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to create user");
+    }
+  };
+
+  const updateUser = async (id: string, data: any) => {
+    try {
+      const res = await instance.put(`/user/${id}`, data);
+      if (res.data.success) {
+        await fetchUsers();
+        return res.data.data;
+      }
+      throw new Error("Failed to update user");
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to update user");
+    }
+  };
+
+  const deleteUserHandler = async (id: string) => {
+    try {
+      const res = await instance.delete(`/user/${id}`);
+      if (res.data.success) {
+        await fetchUsers();
+      } else {
+        throw new Error("Failed to delete user");
+      }
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to delete user");
+    }
+  };
+
+  const toggleUserStatus = async (id: string, status: boolean) => {
+    try {
+      const res = await instance.patch(`/user/${id}/status`, { isActive: !status });
+      if (res.data.success) {
+        await fetchUsers();
+        return res.data.data;
+      }
+      throw new Error("Failed to update status");
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || "Failed to update status");
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+    fetchOrganizations();
+  }, []);
+
+  // Filter users
+  const filteredUsers = users.filter((user) => {
+    // Search filter
+    const searchMatch = `${user.firstName} ${user.lastName} ${user.email}`
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    
+    // Status filter
+    const statusMatch = statusFilter === "all" || 
+      (statusFilter === "active" && user.isActive) ||
+      (statusFilter === "inactive" && !user.isActive);
+    
+    // Role filter
+    const roleMatch = roleFilter === "all" || user.role?._id === roleFilter;
+    
+    return searchMatch && statusMatch && roleMatch;
+  });
+
+  const activeUsers = users.filter(u => u.isActive).length;
+  const totalUsers = users.length;
+
   return (
-    <div className="space-y-6 p-6">
-      <div className="space-y-6 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Users</h1>
-            <p className="text-muted-foreground mt-1">Manage all organizations users ({users.length})</p>
-          </div>
-
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add User
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Create New User</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>First Name</Label>
-                    <Input
-                      value={form.firstName}
-                      onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-                      placeholder="John"
-                    />
-                  </div>
-                  <div>
-                    <Label>Last Name</Label>
-                    <Input
-                      value={form.lastName}
-                      onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                      placeholder="Doe"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Email</Label>
-                  <Input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    placeholder="user@company.com"
-                  />
-                </div>
-
-                <div>
-                  <Label>Password</Label>
-                  <Input
-                    type="password
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    placeholder= "
-                  />
-                </div>
-
-                <div>
-                  <Label>Organization</Label>
-                  {orgLoading ? (
-                    <div className="text-sm text-muted-foreground">Loading organizations...</div>
-                  ) : (
-                    <Select value={form.organization} onValueChange={(v) => setForm({ ...form, organization: v })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select organization" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {organizations.map((org) => (
-                          <SelectItem key={org._id} value={org._id}>
-                            {org.businessName || org.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-
-                <div>
-                  <Label>Role</Label>
-                  <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choose role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="679f31947a4e717c2fcd0099">Admin</SelectItem>
-                      <SelectItem value="679f31947a4e717c2fcd00a1">Accountant</SelectItem>
-                      <SelectItem value="679f31947a4e717c2fcd00a2">Staff</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3">
-                <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-                <Button onClick={handleCreate} disabled={!form.firstName || !form.email || !form.organization}>
-                  Create User
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
+          <p className="text-muted-foreground">
+            Manage all system users ({totalUsers} total, {activeUsers} active)
+          </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchUsers}
+            disabled={loading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          <Button onClick={() => setAddOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add User
+          </Button>
+        </div>
+      </div>
 
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader>
+          <CardContent className="pt-6">
             <div className="flex items-center justify-between">
-              <CardTitle>All Users</CardTitle>
-              <div className="flex items-center gap-3">
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search users..."
-                    className="pl-10"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
-                </div>
-                <Button variant="outline" size="sm" onClick={refetch}>
-                  <RefreshCw className="h-4 w-4" />
-                </Button>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Users</p>
+                <p className="text-2xl font-bold">{totalUsers}</p>
+              </div>
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                <UsersIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="h-8 w-8 animate-spin" />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Active Users</p>
+                <p className="text-2xl font-bold">{activeUsers}</p>
               </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Organization</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => {
-                    const org = organizations.find(o => o._id === user.organization?._id);
-                    return (
-                      <TableRow key={user._id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9">
-                              <AvatarFallback className="bg-primary/10 text-primary">
-                                {getInitials(user.firstName, user.lastName)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{user.firstName} {user.lastName}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {org?.businessName || org?.email || "—"}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">Admin</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.isActive ? "default" : "secondary"}>
-                            {user.isActive ? "Active" : "Inactive"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">
-                          {format(new Date(user.createdAt), "dd MMM yyyy")}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>View Profile</DropdownMenuItem>
-                              <DropdownMenuItem>Edit User</DropdownMenuItem>
-                              <DropdownMenuItem>Reset Password</DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => toggleUserStatus(user._id, user.isActive)}
-                              >
-                                {user.isActive ? "Deactivate" : "Activate"} User
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
+              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                <div className="h-5 w-5 text-green-600 dark:text-green-400">✓</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Admins</p>
+                <p className="text-2xl font-bold">
+                  {users.filter(u => u.role?._id === "679f31947a4e717c2fcd0099").length}
+                </p>
+              </div>
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                <div className="h-5 w-5 text-purple-600 dark:text-purple-400">A</div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Main Content */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <CardTitle>All Users</CardTitle>
+              <CardDescription>
+                View and manage all system users
+              </CardDescription>
+            </div>
+            <UserFilters
+              search={search}
+              onSearchChange={setSearch}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              roleFilter={roleFilter}
+              onRoleFilterChange={setRoleFilter}
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <UserTable
+            users={filteredUsers}
+            loading={loading}
+            onEdit={setEditUser}
+            onDelete={setDeleteUser}
+            onStatusToggle={toggleUserStatus}
+            organizations={organizations}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Dialogs */}
+      <UserAddDialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onCreate={createUser}
+        organizations={organizations}
+        orgLoading={orgLoading}
+      />
+      
+      <UserEditDialog
+        open={!!editUser}
+        onClose={() => setEditUser(null)}
+        onUpdate={updateUser}
+        user={editUser}
+        organizations={organizations}
+      />
+      
+      <UserDeleteDialog
+        open={!!deleteUser}
+        onClose={() => setDeleteUser(null)}
+        onDelete={deleteUserHandler}
+        user={deleteUser}
+      />
     </div>
   );
-};
+}

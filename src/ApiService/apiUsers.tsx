@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import instance from "@/utils/axios";
-import { Organization } from "./apiOrganizations";
 
 export interface User {
   _id: string;
@@ -12,37 +11,69 @@ export interface User {
     name?: string;
     permissions: string[];
   };
-  organization?: Organization;
   tenantId?: string;
+  stripeCustomerId?: string | null;
   isActive: boolean;
   createdAt: string;
+  updatedAt: string;
+  __v?: number;
+}
+
+interface CreateUserData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: string;
+  organization: string[];
+}
+
+interface UpdateUserData {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  role?: string;
+  isActive?: boolean;
+  password?: string;
+}
+
+interface ListUsersResponse {
+  users: User[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 interface UseUsersReturn {
   users: User[];
-  organizations: Organization[];
   loading: boolean;
-  orgLoading: boolean;
   error: string | null;
-  refetch: () => void;
+  refetch: () => Promise<void>;
   total: number;
-  createUser: (data: any) => Promise<any>;
-  toggleUserStatus: (id: string, status: boolean) => Promise<any>;
+  createUser: (data: CreateUserData) => Promise<User>;
+  updateUser: (id: string, data: UpdateUserData) => Promise<User>;
+  deleteUser: (id: string) => Promise<void>;
+  toggleUserStatus: (id: string, status: boolean) => Promise<User>;
 }
 
 export function useUsers(): UseUsersReturn {
   const [users, setUsers] = useState<User[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
-  const [orgLoading, setOrgLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await instance.get("/user");
       if (res.data.success) {
-        setUsers(res.data.data.users);
+        const data: ListUsersResponse = res.data.data;
+        setUsers(data.users || []);
+      } else {
+        setError("Failed to load users");
       }
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to load users");
@@ -51,34 +82,54 @@ export function useUsers(): UseUsersReturn {
     }
   };
 
-  const fetchOrgs = async () => {
+  const createUser = async (data: CreateUserData): Promise<User> => {
     try {
-      setOrgLoading(true);
-      const res = await instance.get("/organizations");
+      const res = await instance.post("/user", data);
       if (res.data.success) {
-        setOrganizations(res.data.data);
+        await fetchUsers();
+        return res.data.data;
       }
-    } catch (err) {
-      console.error("Failed to load organizations");
-    } finally {
-      setOrgLoading(false);
-    }
-  };
-
-  const createUser = async (payload: any) => {
-    try {
-      const res = await instance.post("/users", payload);
-      await fetchUsers();
-      return res.data;
+      throw new Error("Failed to create user");
     } catch (err: any) {
       throw new Error(err.response?.data?.message || "Failed to create user");
     }
   };
 
-  const toggleUserStatus = async (id: string, isActive: boolean) => {
+  const updateUser = async (id: string, data: UpdateUserData): Promise<User> => {
     try {
-      await instance.patch(`/user/${id}/status`, { isActive: !isActive });
-      await fetchUsers();
+      const res = await instance.put(`/user/${id}`, data);
+      if (res.data.success) {
+        await fetchUsers();
+        return res.data.data;
+      }
+      throw new Error("Failed to update user");
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || "Failed to update user");
+    }
+  };
+
+  const deleteUser = async (id: string): Promise<void> => {
+    try {
+      const res = await instance.patch(`/user/${id}/deactivate`);
+      if (res.data.success) {
+        await fetchUsers();
+      } else {
+        throw new Error("Failed to delete user");
+      }
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || "Failed to delete user");
+    }
+  };
+
+  const toggleUserStatus = async (id: string, status: boolean): Promise<User> => {
+    try {
+      // First get the current user to see if we need to activate or deactivate
+      const res = await instance.put(`/user/${id}`, { isActive: !status });
+      if (res.data.success) {
+        await fetchUsers();
+        return res.data.data;
+      }
+      throw new Error("Failed to update status");
     } catch (err: any) {
       throw new Error(err.response?.data?.message || "Failed to update status");
     }
@@ -86,18 +137,17 @@ export function useUsers(): UseUsersReturn {
 
   useEffect(() => {
     fetchUsers();
-    fetchOrgs();
   }, []);
 
   return {
     users,
-    organizations,
     loading,
-    orgLoading,
     error,
     refetch: fetchUsers,
     total: users.length,
     createUser,
+    updateUser,
+    deleteUser,
     toggleUserStatus,
   };
 }

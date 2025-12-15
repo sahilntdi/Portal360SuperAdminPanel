@@ -4,25 +4,14 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { AddOrganizationDialog } from "@/components/AddOrganizationDialog";
-import { Search, MoreVertical, Users, CreditCard, Loader2, RefreshCw } from "lucide-react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useOrganizations } from "../ApiService/apiOrganizations";
+import { Skeleton } from "@/components/ui/skeleton";
+import { OrganizationAddDialog } from "@/components/organizations/OrganizationAddDialog";
+import { OrganizationEditDialog } from "@/components/organizations/OrganizationEditDialog";
+import { OrganizationDeleteDialog } from "@/components/organizations/OrganizationDeleteDialog";
+import { OrganizationTable } from "@/components/organizations/OrganizationTable";
+import { OrganizationFilters } from "@/components/organizations/OrganizationFilters";
+import { RefreshCw, Loader2 } from "lucide-react";
+import { useOrganizations, Organization } from "@/ApiService/apiOrganizations";
 import { toast } from "sonner";
 
 const Organizations = () => {
@@ -33,48 +22,89 @@ const Organizations = () => {
     error,
     refetch,
     total,
+    updateOrganization,
+    deleteOrganization,
     changeStatus,
-    deleteOrganization
   } = useOrganizations();
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [planFilter, setPlanFilter] = useState("all");
+  const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+  const [deletingOrg, setDeletingOrg] = useState<Organization | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const filteredOrgs = organizations.filter(org =>
-    org.businessName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    org.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    org.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    org.lastName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOrgs = organizations.filter((org) => {
+    const matchesSearch =
+      org.businessName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      org.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      org.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      org.lastName?.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const handleStatusChange = async (orgId: string, currentStatus: string) => {
-    const newStatus = currentStatus === "active" ? "suspended" : "active";
+    const matchesStatus = statusFilter === "all" || org.status === statusFilter;
+    const matchesPlan = planFilter === "all" || org.planName === planFilter;
+
+    return matchesSearch && matchesStatus && matchesPlan;
+  });
+
+  const activeFiltersCount = [
+    statusFilter !== "all",
+    planFilter !== "all",
+  ].filter(Boolean).length;
+
+  const handleEdit = (org: Organization) => {
+    setEditingOrg(org);
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = (org: Organization) => {
+    setDeletingOrg(org);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleView = (org: Organization) => {
+    navigate(`/organizations/${org._id}`);
+  };
+
+  const handleStatusChange = async (id: string, status: string) => {
     try {
-      await changeStatus(orgId, newStatus);
-      toast.success(`Organization ${newStatus === "active" ? "activated" : "suspended"} successfully`);
+      await changeStatus(id, status);
+      toast.success(`Organization ${status === "active" ? "activated" : "suspended"}`);
     } catch (err) {
       toast.error("Failed to change status");
     }
   };
 
-  const handleDelete = async (orgId: string) => {
-    if (confirm("Are you sure you want to delete this organization?")) {
-      try {
-        await deleteOrganization(orgId);
-        toast.success("Organization deleted successfully");
-      } catch (err) {
-        toast.error("Failed to delete organization");
-      }
+  const handleUpdateOrganization = async (data: any) => {
+    if (!editingOrg) return;
+    
+    try {
+      await updateOrganization(editingOrg._id, data);
+      toast.success("Organization updated successfully");
+      setEditDialogOpen(false);
+    } catch (err) {
+      toast.error("Failed to update organization");
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-10 w-10 animate-spin text-primary mr-3" />
-        <span className="text-lg">Loading organizations...</span>
-      </div>
-    );
-  }
+  const handleDeleteOrganization = async () => {
+    if (!deletingOrg) return;
+    
+    try {
+      await deleteOrganization(deletingOrg._id);
+      toast.success("Organization deleted successfully");
+      setDeleteDialogOpen(false);
+    } catch (err) {
+      toast.error("Failed to delete organization");
+    }
+  };
+
+  const clearFilters = () => {
+    setSearchQuery("");
+    setStatusFilter("all");
+    setPlanFilter("all");
+  };
 
   if (error) {
     return (
@@ -89,137 +119,115 @@ const Organizations = () => {
 
   return (
     <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
+      {/* Header with Skeleton when loading */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Organizations</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage all tenant organizations ({total} total)
-          </p>
+          {loading && organizations.length === 0 ? (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-36" />
+            </div>
+          ) : (
+            <>
+              <h1 className="text-3xl font-bold">Organizations</h1>
+              <p className="text-muted-foreground mt-1">
+                Manage all tenant organizations ({total} total)
+              </p>
+            </>
+          )}
         </div>
-        <AddOrganizationDialog onSuccess={refetch} />
+        {loading && organizations.length === 0 ? (
+          <Skeleton className="h-10 w-40" />
+        ) : (
+          <OrganizationAddDialog onSuccess={refetch} />
+        )}
       </div>
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>All Organizations</CardTitle>
-            <div className="flex items-center gap-3">
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search organizations..."
-                  className="pl-10"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          <div className="flex flex-col space-y-4">
+            {loading && organizations.length === 0 ? (
+              <Skeleton className="h-6 w-48" />
+            ) : (
+              <CardTitle>All Organizations</CardTitle>
+            )}
+            
+            {loading && organizations.length === 0 ? (
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Skeleton className="h-10 flex-1" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-10 w-[140px]" />
+                    <Skeleton className="h-10 w-[140px]" />
+                    <Skeleton className="h-10 w-20" />
+                  </div>
+                </div>
               </div>
-              <Button variant="outline" size="sm" onClick={refetch}>
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
+            ) : (
+              <OrganizationFilters
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                planFilter={planFilter}
+                onPlanFilterChange={setPlanFilter}
+                onClearFilters={clearFilters}
+                activeFiltersCount={activeFiltersCount}
+              />
+            )}
           </div>
         </CardHeader>
 
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Organization</TableHead>
-                <TableHead>Admin</TableHead>
-                <TableHead>Users</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Active</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredOrgs.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                    No organizations found
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredOrgs.map((org) => (
-                  <TableRow key={org._id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{org.businessName}</p>
-                        {org.practiceName && (
-                          <p className="text-sm text-muted-foreground">{org.practiceName}</p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-sm">
-                          {org.firstName} {org.lastName}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{org.email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-muted-foreground" />
-                        {org.metrics?.totalUsers || 1}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
-                        <span className="capitalize">{org.planName || 'starter'}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          org.status === "active" ? "default" :
-                            org.status === "pending" ? "secondary" :
-                              "destructive"
-                        }
-                      >
-                        {org.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(org.lastActive).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/organizations/${org._id}`)}>
-                            View Details
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>Edit Organization</DropdownMenuItem>
-                          <DropdownMenuItem>Manage Users</DropdownMenuItem>
-                          <DropdownMenuItem>Change Plan</DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleStatusChange(org._id, org.status)}
-                          >
-                            {org.status === "active" ? "Suspend" : "Activate"}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => handleDelete(org._id)}
-                          >
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          {loading && organizations.length === 0 ? (
+            <div className="mb-4 flex items-center justify-between">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-9 w-9 rounded-md" />
+            </div>
+          ) : (
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Showing {filteredOrgs.length} of {total} organizations
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={refetch}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          )}
+
+          <OrganizationTable
+            organizations={filteredOrgs}
+            loading={loading}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onStatusToggle={handleStatusChange}
+          />
         </CardContent>
       </Card>
+
+      <OrganizationEditDialog
+        organization={editingOrg}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSuccess={refetch}
+      />
+
+      <OrganizationDeleteDialog
+        organization={deletingOrg}
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onSuccess={refetch}
+      />
     </div>
   );
 };

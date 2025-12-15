@@ -24,7 +24,7 @@ import AIAutomation from "./pages/AIAutomation";
 import Compliance from "./pages/Compliance";
 import NotFound from "./pages/NotFound";
 import WebsiteQuery from "./pages/WebsiteQuery";
-import OrganizationDetailView from "./components/OrganizationDetailView";
+import OrganizationDetailView from "./components/organizations/OrganizationDetailView";
 
 const queryClient = new QueryClient();
 
