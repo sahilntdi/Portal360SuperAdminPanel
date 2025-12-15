@@ -49,6 +49,17 @@ export default function Pricing() {
     }
    
   };
+const filteredData = React.useMemo(() => {
+  if (activeTab === "active") {
+    return stats.data.filter((p) => p.isActive);
+  }
+
+  if (activeTab === "featured") {
+    return stats.data.filter((p) => p.highlighted);
+  }
+
+  return stats.data; // all
+}, [activeTab, stats.data]);
 
   useEffect(() => {
     fetchData();
@@ -158,7 +169,7 @@ console.log("Pricing Stats:", stats);
             onDelete={(item) => setDeleteItem(item)}
             onView={(item) => setDetailItem(item)}
             loading={loading}
-            data={stats.data}
+            data={filteredData}
           />
         </CardContent>
       </Card>

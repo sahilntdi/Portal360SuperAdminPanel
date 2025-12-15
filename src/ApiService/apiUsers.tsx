@@ -67,7 +67,7 @@ export function useUsers(): UseUsersReturn {
 
   const createUser = async (payload: any) => {
     try {
-      const res = await instance.post("/api/users", payload);
+      const res = await instance.post("/users", payload);
       await fetchUsers();
       return res.data;
     } catch (err: any) {
