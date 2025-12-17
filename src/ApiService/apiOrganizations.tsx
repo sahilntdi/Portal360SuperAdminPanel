@@ -56,7 +56,7 @@ export function useOrganizations(): UseOrganizationsReturn {
 
   const createOrganization = async (data: CreateOrganizationData): Promise<Organization> => {
     try {
-      const response = await instance.post("http://localhost:8181/api/V2/auth/register", {
+      const response = await instance.post("https://portal360v2-gpamdychg2hgbbf6.australiaeast-01.azurewebsites.net/api/V2/auth/register", {
         ...data,
         planName: data.paymentOption === 'alreadyPaid' ? data.plan : undefined
       });
@@ -74,7 +74,7 @@ export function useOrganizations(): UseOrganizationsReturn {
 
   const updateOrganization = async (id: string, data: UpdateOrganizationData): Promise<Organization> => {
     try {
-      const response = await instance.patch(`http://localhost:8181/api/V2/auth/user`, data);
+      const response = await instance.patch(`https://portal360v2-gpamdychg2hgbbf6.australiaeast-01.azurewebsites.net/api/V2/auth/user`, data);
       
 
       if (response.data.success && response.data.data) {
