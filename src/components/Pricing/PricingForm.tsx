@@ -55,10 +55,9 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel }) {
       const match = featureList.find((x) => x.name === f.name);
 
       return {
-        featureId: match?._id || null,
+        featureId: match?._id || f.featureId || null, // ✅ fallback
         name: f.name,
         value: f.value,
-        isValid: Boolean(match),
       };
     });
 
@@ -98,12 +97,12 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel }) {
   };
 
   const handleSubmit = () => {
-    const validFeatures = form.features
-      .filter((f) => f.featureId)
-      .map((f) => ({
-        featureId: f.featureId,
-        value: f.value,
-      }));
+    const validFeatures = form.features.map((f) => ({
+      featureId: f.featureId,
+      name: f.name,
+      value: f.value,
+    }));
+
 
     const payload = {
       name: form.name,

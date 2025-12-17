@@ -27,53 +27,49 @@ export function UserAddDialog({ open, onClose, onCreate, organizations, orgLoadi
     organization: "",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!form.organization) {
-      toast({
-        title: "Error",
-        description: "Please select an organization",
-        variant: "destructive",
-      });
-      return;
-    }
+// UserAddDialog.tsx में onCreate call करने का तरीका:
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!form.organization) {
+    toast({
+      title: "Error",
+      description: "Please select an organization",
+      variant: "destructive",
+    });
+    return;
+  }
 
-    setLoading(true);
-    try {
-      await onCreate({
-        firstName: form.firstName,
-        lastName: form.lastName,
-        email: form.email,
-        password: form.password,
-        role: form.role,
-        organization: [form.organization],
-      });
-      
-      toast({
-        title: "Success",
-        description: "User created successfully",
-      });
-      
-      setForm({
-        firstName: "",
-        lastName: "",
-        email: "",
-        password: "",
-        role: "",
-        organization: "",
-      });
-      onClose();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create user",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  try {
+    await onCreate({
+      firstName: form.firstName,
+      lastName: form.lastName,
+      email: form.email,
+      password: form.password,
+      role: form.role,
+      organization: [form.organization],
+    });
+    
+    setForm({
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      role: "",
+      organization: "",
+    });
+    onClose();
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description: error.message || "Failed to create user",
+      variant: "destructive",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

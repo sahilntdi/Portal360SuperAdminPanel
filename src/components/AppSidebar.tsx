@@ -34,7 +34,7 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
-
+import { useTheme } from "next-themes";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logout } from "@/store/slices/authSlice";
 
@@ -48,14 +48,13 @@ const menuItems = [
   { title: "Features", url: "/features", icon: Puzzle },
   { title: "Website Content", url: "/website-content", icon: Globe },
   { title: "Help & Support", url: "/help", icon: HelpCircle },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
   { title: "Security", url: "/security", icon: Shield },
   { title: "Email Triggers", url: "/email-triggers", icon: Mail },
-  { title: "AI & Automation", url: "/ai-automation", icon: Bot },
-  { title: "Compliance", url: "/compliance", icon: FileCheck },
-  {title: "website Querys", url: "/website-queries", icon: Mail},
+  // { title: "AI & Automation", url: "/ai-automation", icon: Bot },
+  // { title: "Compliance", url: "/compliance", icon: FileCheck },
+  { title: "website Querys", url: "/website-queries", icon: Mail },
 ];
- 
+
 // ACTIVE + COLLAPSED ALIGNMENT FIX
 const getNavCls = (active: boolean, collapsed: boolean) =>
   cn(
@@ -73,7 +72,7 @@ export function AppSidebar() {
   const { open, toggleSidebar } = useSidebar();
   const collapsed = !open;
   const { pathname } = useLocation();
-
+const { theme } = useTheme();
   return (
     <motion.div
       initial={false}
@@ -104,8 +103,12 @@ export function AppSidebar() {
       {/* TOP HEADER */}
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold">P</span>
+          <div className="h-12 w-12 rounded-lg overflow-hidden flex items-center justify-center bg-white">
+            <img
+               src={theme === "dark" ? "/dark2.png" : "/p.png"}
+              alt="Portal 360 Logo"
+              className="h-full w-full object-contain"
+            />
           </div>
 
           <AnimatePresence>

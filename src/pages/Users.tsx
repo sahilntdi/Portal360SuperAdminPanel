@@ -1,21 +1,15 @@
+// src/pages/Users.tsx
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Users as UsersIcon, RefreshCw, Loader2 } from "lucide-react";
-import instance from "@/utils/axios";
+import { Plus, Users as UsersIcon, RefreshCw } from "lucide-react";
 import { UserAddDialog } from "@/components/users/UserAddDialog";
 import { UserEditDialog } from "@/components/users/UserEditDialog";
 import { UserDeleteDialog } from "@/components/users/UserDeleteDialog";
 import { UserTable } from "@/components/users/UserTable";
 import { UserFilters } from "@/components/users/UserFilters";
-import type { User } from "@/ApiService/apiUsers";
-
-interface Organization {
-  _id: string;
-  businessName?: string;
-  email?: string;
-}
+import { UserService, type User, type Organization } from "@/ApiService/apiUsers";
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -34,19 +28,16 @@ export default function UsersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
 
+  // Fetch data
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const res = await instance.get("/user");
-      if (res.data.success) {
-        setUsers(res.data.data.users || []);
-      } else {
-        throw new Error("Failed to load users");
-      }
+      const data = await UserService.getUsers();
+      setUsers(data);
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to load users",
+        description: error.message || "Failed to load users",
         variant: "destructive",
       });
     } finally {
@@ -57,69 +48,73 @@ export default function UsersPage() {
   const fetchOrganizations = async () => {
     try {
       setOrgLoading(true);
-      const res = await instance.get("/organizations");
-      if (res.data.success) {
-        setOrganizations(res.data.data || []);
-      }
-    } catch (error) {
+      const data = await UserService.getOrganizations();
+      setOrganizations(data);
+    } catch (error: any) {
       console.error("Failed to load organizations:", error);
     } finally {
       setOrgLoading(false);
     }
   };
 
-  const createUser = async (data: any) => {
+  // Handle actions
+  const handleCreateUser = async (data: any) => {
     try {
-      const res = await instance.post("/user", data);
-      if (res.data.success) {
-        await fetchUsers();
-        return res.data.data;
-      }
-      throw new Error("Failed to create user");
+      await UserService.createUser(data);
+      await fetchUsers();
+      toast({
+        title: "Success",
+        description: "User created successfully",
+      });
+      return true;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Failed to create user");
+      throw new Error(error.message || "Failed to create user");
     }
   };
 
-  const updateUser = async (id: string, data: any) => {
+  const handleUpdateUser = async (id: string, data: any) => {
     try {
-      const res = await instance.put(`/user/${id}`, data);
-      if (res.data.success) {
-        await fetchUsers();
-        return res.data.data;
-      }
-      throw new Error("Failed to update user");
+      await UserService.updateUser(id, data);
+      await fetchUsers();
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      });
+      return true;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Failed to update user");
+      throw new Error(error.message || "Failed to update user");
     }
   };
 
-  const deleteUserHandler = async (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     try {
-      const res = await instance.delete(`/user/${id}`);
-      if (res.data.success) {
-        await fetchUsers();
-      } else {
-        throw new Error("Failed to delete user");
-      }
+      await UserService.deleteUser(id);
+      await fetchUsers();
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+      return true;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Failed to delete user");
+      throw new Error(error.message || "Failed to delete user");
     }
   };
 
-  const toggleUserStatus = async (id: string, status: boolean) => {
+  const handleToggleStatus = async (id: string, status: boolean) => {
     try {
-      const res = await instance.patch(`/user/${id}/status`, { isActive: !status });
-      if (res.data.success) {
-        await fetchUsers();
-        return res.data.data;
-      }
-      throw new Error("Failed to update status");
+      await UserService.toggleUserStatus(id, status);
+      await fetchUsers();
+      toast({
+        title: "Success",
+        description: `User ${status ? 'deactivated' : 'activated'} successfully`,
+      });
+      return true;
     } catch (error: any) {
-      throw new Error(error.response?.data?.message || "Failed to update status");
+      throw new Error(error.message || "Failed to update status");
     }
   };
 
+  // Load data on mount
   useEffect(() => {
     fetchUsers();
     fetchOrganizations();
@@ -127,17 +122,14 @@ export default function UsersPage() {
 
   // Filter users
   const filteredUsers = users.filter((user) => {
-    // Search filter
     const searchMatch = `${user.firstName} ${user.lastName} ${user.email}`
       .toLowerCase()
       .includes(search.toLowerCase());
     
-    // Status filter
     const statusMatch = statusFilter === "all" || 
       (statusFilter === "active" && user.isActive) ||
       (statusFilter === "inactive" && !user.isActive);
     
-    // Role filter
     const roleMatch = roleFilter === "all" || user.role?._id === roleFilter;
     
     return searchMatch && statusMatch && roleMatch;
@@ -246,7 +238,7 @@ export default function UsersPage() {
             loading={loading}
             onEdit={setEditUser}
             onDelete={setDeleteUser}
-            onStatusToggle={toggleUserStatus}
+            onStatusToggle={handleToggleStatus}
             organizations={organizations}
           />
         </CardContent>
@@ -256,7 +248,7 @@ export default function UsersPage() {
       <UserAddDialog
         open={addOpen}
         onClose={() => setAddOpen(false)}
-        onCreate={createUser}
+        onCreate={handleCreateUser}
         organizations={organizations}
         orgLoading={orgLoading}
       />
@@ -264,7 +256,7 @@ export default function UsersPage() {
       <UserEditDialog
         open={!!editUser}
         onClose={() => setEditUser(null)}
-        onUpdate={updateUser}
+        onUpdate={handleUpdateUser}
         user={editUser}
         organizations={organizations}
       />
@@ -272,7 +264,7 @@ export default function UsersPage() {
       <UserDeleteDialog
         open={!!deleteUser}
         onClose={() => setDeleteUser(null)}
-        onDelete={deleteUserHandler}
+        onDelete={handleDeleteUser}
         user={deleteUser}
       />
     </div>

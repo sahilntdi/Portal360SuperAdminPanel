@@ -1,48 +1,11 @@
-import { useState, useEffect } from "react";
-import instance from "@/utils/axios";
 
-export interface Organization {
-  _id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  businessName: string;
-  practiceName?: string;
-  dbName?: string;
-  plan?: string;
-  planName: string;
-  status: "active" | "suspended" | "cancelled" | "pending";
-  onboardingData?: {
-    clientsRange?: string;
-    nature?: string[];
-    structure?: any;
-    connectedEmail?: string;
-    completedAt?: Date;
-  };
-  subscription?: {
-    status: "trial" | "active" | "expired" | "cancelled" | "past_due";
-    trialStartDate?: Date;
-    trialEndsAt?: Date;
-    billingCycle?: "monthly" | "yearly";
-    nextBillingDate?: Date;
-    planSubs?: {
-      name?: string;
-      price?: number;
-      period?: string;
-      features?: any[];
-    };
-  };
-  metrics?: {
-    totalUsers: number;
-    totalClients: number;
-    storageUsed: number;
-    apiCallsThisMonth: number;
-  };
-  registeredAt: string;
-  lastActive: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { useState, useEffect, useCallback } from "react";
+import instance from "@/utils/axios";
+import type { 
+  Organization, 
+  CreateOrganizationData, 
+  UpdateOrganizationData 
+} from "@/types/organizations";
 
 interface OrganizationsResponse {
   success: boolean;
@@ -54,12 +17,13 @@ interface UseOrganizationsReturn {
   organizations: Organization[];
   loading: boolean;
   error: string | null;
-  refetch: () => void;
+  refetch: () => Promise<void>;
   total: number;
-  createOrganization: (data: any) => Promise<any>;
-  updateOrganization: (id: string, data: any) => Promise<any>;
-  deleteOrganization: (id: string) => Promise<any>;
-  changeStatus: (id: string, status: string) => Promise<any>;
+  createOrganization: (data: CreateOrganizationData) => Promise<Organization>;
+  updateOrganization: (id: string, data: UpdateOrganizationData) => Promise<Organization>;
+  deleteOrganization: (id: string) => Promise<void>;
+  changeStatus: (id: string, status: string) => Promise<Organization>;
+  getOrganizationById: (id: string) => Organization | undefined;
 }
 
 export function useOrganizations(): UseOrganizationsReturn {
@@ -68,7 +32,7 @@ export function useOrganizations(): UseOrganizationsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchOrganizations = async () => {
+  const fetchOrganizations = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -88,55 +52,79 @@ export function useOrganizations(): UseOrganizationsReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const createOrganization = async (data: any) => {
+  const createOrganization = async (data: CreateOrganizationData): Promise<Organization> => {
     try {
-      const response = await instance.post("/organizations", data);
-      await fetchOrganizations(); // Refresh list
-      return response.data;
+      const response = await instance.post("http://localhost:8181/api/V2/auth/register", {
+        ...data,
+        planName: data.paymentOption === 'alreadyPaid' ? data.plan : undefined
+      });
+      
+      if (response.data.success && response.data.data) {
+        await fetchOrganizations();
+        return response.data.data;
+      }
+      throw new Error("Failed to create organization");
     } catch (err: any) {
       const message = err.response?.data?.message || "Failed to create organization";
       throw new Error(message);
     }
   };
 
-  const updateOrganization = async (id: string, data: any) => {
+  const updateOrganization = async (id: string, data: UpdateOrganizationData): Promise<Organization> => {
     try {
-      const response = await instance.put(`/organizations/${id}`, data);
-      await fetchOrganizations();
-      return response.data;
+      const response = await instance.patch(`http://localhost:8181/api/V2/auth/user`, data);
+      
+
+      if (response.data.success && response.data.data) {
+        setOrganizations(prev => 
+          prev.map(org => org._id === id ? response.data.data : org)
+        );
+        return response.data.data;
+      }
+      throw new Error("Failed to update organization");
     } catch (err: any) {
       const message = err.response?.data?.message || "Failed to update organization";
       throw new Error(message);
     }
   };
 
-  const changeStatus = async (id: string, status: string) => {
+  const changeStatus = async (id: string, status: string): Promise<Organization> => {
     try {
       const response = await instance.patch(`/organizations/${id}/status`, { status });
-      await fetchOrganizations();
-      return response.data;
+      
+      if (response.data.success && response.data.data) {
+        setOrganizations(prev => 
+          prev.map(org => org._id === id ? response.data.data : org)
+        );
+        return response.data.data;
+      }
+      throw new Error("Failed to change status");
     } catch (err: any) {
       const message = err.response?.data?.message || "Failed to change status";
       throw new Error(message);
     }
   };
 
-  const deleteOrganization = async (id: string) => {
+  const deleteOrganization = async (id: string): Promise<void> => {
     try {
-      const response = await instance.delete(`/organizations/${id}`);
-      await fetchOrganizations();
-      return response.data;
+      await instance.delete(`/organizations/${id}`);
+      setOrganizations(prev => prev.filter(org => org._id !== id));
+      setTotal(prev => prev - 1);
     } catch (err: any) {
       const message = err.response?.data?.message || "Failed to delete organization";
       throw new Error(message);
     }
   };
 
+  const getOrganizationById = (id: string): Organization | undefined => {
+    return organizations.find(org => org._id === id);
+  };
+
   useEffect(() => {
     fetchOrganizations();
-  }, []);
+  }, [fetchOrganizations]);
 
   return {
     organizations,
@@ -148,5 +136,8 @@ export function useOrganizations(): UseOrganizationsReturn {
     updateOrganization,
     deleteOrganization,
     changeStatus,
+    getOrganizationById
   };
 }
+
+export { type Organization };

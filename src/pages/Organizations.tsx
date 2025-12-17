@@ -11,8 +11,9 @@ import { OrganizationDeleteDialog } from "@/components/organizations/Organizatio
 import { OrganizationTable } from "@/components/organizations/OrganizationTable";
 import { OrganizationFilters } from "@/components/organizations/OrganizationFilters";
 import { RefreshCw, Loader2 } from "lucide-react";
-import { useOrganizations, Organization } from "@/ApiService/apiOrganizations";
+import { useOrganizations } from "@/ApiService/apiOrganizations";
 import { toast } from "sonner";
+import type { Organization } from "@/types/organizations";
 
 const Organizations = () => {
   const navigate = useNavigate();
@@ -22,9 +23,9 @@ const Organizations = () => {
     error,
     refetch,
     total,
-    updateOrganization,
-    deleteOrganization,
     changeStatus,
+    deleteOrganization,
+    updateOrganization,
   } = useOrganizations();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,32 +72,20 @@ const Organizations = () => {
     try {
       await changeStatus(id, status);
       toast.success(`Organization ${status === "active" ? "activated" : "suspended"}`);
-    } catch (err) {
-      toast.error("Failed to change status");
-    }
-  };
-
-  const handleUpdateOrganization = async (data: any) => {
-    if (!editingOrg) return;
-    
-    try {
-      await updateOrganization(editingOrg._id, data);
-      toast.success("Organization updated successfully");
-      setEditDialogOpen(false);
-    } catch (err) {
-      toast.error("Failed to update organization");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to change status");
     }
   };
 
   const handleDeleteOrganization = async () => {
     if (!deletingOrg) return;
-    
+
     try {
       await deleteOrganization(deletingOrg._id);
       toast.success("Organization deleted successfully");
       setDeleteDialogOpen(false);
-    } catch (err) {
-      toast.error("Failed to delete organization");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to delete organization");
     }
   };
 
@@ -119,7 +108,7 @@ const Organizations = () => {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header with Skeleton when loading */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           {loading && organizations.length === 0 ? (
@@ -151,7 +140,7 @@ const Organizations = () => {
             ) : (
               <CardTitle>All Organizations</CardTitle>
             )}
-            
+
             {loading && organizations.length === 0 ? (
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row gap-3">
@@ -189,9 +178,9 @@ const Organizations = () => {
               <p className="text-sm text-muted-foreground">
                 Showing {filteredOrgs.length} of {total} organizations
               </p>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={refetch}
                 disabled={loading}
               >
@@ -215,6 +204,7 @@ const Organizations = () => {
         </CardContent>
       </Card>
 
+      {/* Dialogs */}
       <OrganizationEditDialog
         organization={editingOrg}
         open={editDialogOpen}
@@ -226,7 +216,16 @@ const Organizations = () => {
         organization={deletingOrg}
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        onSuccess={refetch}
+        onDelete={async () => {
+          if (!deletingOrg) return;
+          try {
+            await deleteOrganization(deletingOrg._id); // This will call the API
+            toast.success("Organization deleted successfully");
+            setDeleteDialogOpen(false);
+          } catch (err: any) {
+            throw new Error(err.message || "Failed to delete organization");
+          }
+        }}
       />
     </div>
   );

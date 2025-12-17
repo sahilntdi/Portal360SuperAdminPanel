@@ -19,7 +19,7 @@ function getCookie(name) {
 /* ====== AXIOS INSTANCE ====== */
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 15000,
+  timeout: 150000,
   withCredentials: true,
 });
 

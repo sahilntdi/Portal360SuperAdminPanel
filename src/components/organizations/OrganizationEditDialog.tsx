@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { OrganizationForm, OrganizationFormData } from "./OrganizationForm";
+"use client";
+
+import React, { useState } from "react";
+import { OrganizationDialog } from "./OrganizationDialog";
+import { useOrganizations } from "@/ApiService/apiOrganizations";
 import { toast } from "sonner";
-import type { Organization } from "@/ApiService/apiOrganizations";
+import type { Organization, UpdateOrganizationData } from "@/types/organizations";
 
 interface OrganizationEditDialogProps {
   organization: Organization | null;
@@ -24,61 +20,34 @@ export function OrganizationEditDialog({
   onSuccess,
 }: OrganizationEditDialogProps) {
   const [loading, setLoading] = useState(false);
+  const { updateOrganization } = useOrganizations();
 
-  const handleSubmit = async (data: OrganizationFormData) => {
+  const handleSubmit = async (data: UpdateOrganizationData) => {
     if (!organization) return;
-
+    
     try {
       setLoading(true);
-      // API call will be handled by parent component
-      console.log("Update organization:", organization._id, data);
-      toast.success("Organization updated successfully");
+      await updateOrganization(organization._id, data);
+      toast.success("Organization updated successfully!");
       onOpenChange(false);
       onSuccess();
-    } catch (error) {
-      toast.error("Failed to update organization");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update organization");
     } finally {
       setLoading(false);
     }
   };
 
-  // Transform organization data to form data
-  const getFormData = () => {
-    if (!organization) return undefined;
-
-    return {
-      email: organization.email || "",
-      firstName: organization.firstName || "",
-      lastName: organization.lastName || "",
-      businessName: organization.businessName || "",
-      practiceName: organization.practiceName || "",
-      phone: organization.phone || "",
-      address: organization.address || "",
-      planName: organization.planName || "starter",
-      status: organization.status || "active",
-      sendWelcomeEmail: false, // Don't send welcome email on edit
-      customMessage: "",
-    };
-  };
+  if (!organization) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Edit Organization</DialogTitle>
-          <DialogDescription>
-            Update organization details and settings.
-          </DialogDescription>
-        </DialogHeader>
-        {organization && (
-          <OrganizationForm
-            initialData={getFormData()}
-            onSubmit={handleSubmit}
-            loading={loading}
-            mode="edit"
-          />
-        )}
-      </DialogContent>
-    </Dialog>
+    <OrganizationDialog
+      organization={organization}
+      open={open}
+      onOpenChange={onOpenChange}
+      onSubmit={handleSubmit}
+      loading={loading}
+      mode="edit"
+    />
   );
 }

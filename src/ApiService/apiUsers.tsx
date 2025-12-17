@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+// src/ApiService/apiUsers.tsx
 import instance from "@/utils/axios";
 
 export interface User {
@@ -11,12 +11,23 @@ export interface User {
     name?: string;
     permissions: string[];
   };
+  organization?: {
+    _id: string;
+    businessName?: string;
+    email?: string;
+  };
   tenantId?: string;
   stripeCustomerId?: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
   __v?: number;
+}
+
+export interface Organization {
+  _id: string;
+  businessName?: string;
+  email?: string;
 }
 
 interface CreateUserData {
@@ -47,107 +58,93 @@ interface ListUsersResponse {
   };
 }
 
-interface UseUsersReturn {
-  users: User[];
-  loading: boolean;
-  error: string | null;
-  refetch: () => Promise<void>;
-  total: number;
-  createUser: (data: CreateUserData) => Promise<User>;
-  updateUser: (id: string, data: UpdateUserData) => Promise<User>;
-  deleteUser: (id: string) => Promise<void>;
-  toggleUserStatus: (id: string, status: boolean) => Promise<User>;
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
 }
 
-export function useUsers(): UseUsersReturn {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await instance.get("/user");
-      if (res.data.success) {
-        const data: ListUsersResponse = res.data.data;
-        setUsers(data.users || []);
-      } else {
-        setError("Failed to load users");
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to load users");
-    } finally {
-      setLoading(false);
+export class UserService {
+  // Get all users
+  static async getUsers(): Promise<User[]> {
+    const res = await instance.get<ApiResponse<ListUsersResponse>>("/user");
+    if (res.data.success) {
+      return res.data.data.users || [];
     }
-  };
+    throw new Error(res.data.message || "Failed to fetch users");
+  }
 
-  const createUser = async (data: CreateUserData): Promise<User> => {
-    try {
-      const res = await instance.post("/user", data);
-      if (res.data.success) {
-        await fetchUsers();
-        return res.data.data;
-      }
-      throw new Error("Failed to create user");
-    } catch (err: any) {
-      throw new Error(err.response?.data?.message || "Failed to create user");
+  // Get a single user by ID
+  static async getUserById(id: string): Promise<User> {
+    const res = await instance.get<ApiResponse<User>>(`/user/${id}`);
+    if (res.data.success) {
+      return res.data.data;
     }
-  };
+    throw new Error(res.data.message || "Failed to fetch user");
+  }
 
-  const updateUser = async (id: string, data: UpdateUserData): Promise<User> => {
-    try {
-      const res = await instance.put(`/user/${id}`, data);
-      if (res.data.success) {
-        await fetchUsers();
-        return res.data.data;
-      }
-      throw new Error("Failed to update user");
-    } catch (err: any) {
-      throw new Error(err.response?.data?.message || "Failed to update user");
+  // Create a new user
+  static async createUser(data: CreateUserData): Promise<User> {
+    const res = await instance.post<ApiResponse<User>>("/user", data);
+    if (res.data.success) {
+      return res.data.data;
     }
-  };
+    throw new Error(res.data.message || "Failed to create user");
+  }
 
-  const deleteUser = async (id: string): Promise<void> => {
-    try {
-      const res = await instance.patch(`/user/${id}/deactivate`);
-      if (res.data.success) {
-        await fetchUsers();
-      } else {
-        throw new Error("Failed to delete user");
-      }
-    } catch (err: any) {
-      throw new Error(err.response?.data?.message || "Failed to delete user");
+  // Update a user
+  static async updateUser(id: string, data: UpdateUserData): Promise<User> {
+    const res = await instance.put<ApiResponse<User>>(`/user/${id}`, data);
+    if (res.data.success) {
+      return res.data.data;
     }
-  };
+    throw new Error(res.data.message || "Failed to update user");
+  }
 
-  const toggleUserStatus = async (id: string, status: boolean): Promise<User> => {
-    try {
-      // First get the current user to see if we need to activate or deactivate
-      const res = await instance.put(`/user/${id}`, { isActive: !status });
-      if (res.data.success) {
-        await fetchUsers();
-        return res.data.data;
-      }
-      throw new Error("Failed to update status");
-    } catch (err: any) {
-      throw new Error(err.response?.data?.message || "Failed to update status");
+  // Delete a user (deactivate)
+  static async deleteUser(id: string): Promise<void> {
+    const res = await instance.patch<ApiResponse<void>>(`/user/${id}/deactivate`);
+    if (!res.data.success) {
+      throw new Error(res.data.message || "Failed to delete user");
     }
-  };
+  }
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  // Toggle user status
+  static async toggleUserStatus(id: string, status: boolean): Promise<User> {
+    const res = await instance.patch<ApiResponse<User>>(`/user/${id}/status`, { 
+      isActive: !status 
+    });
+    if (res.data.success) {
+      return res.data.data;
+    }
+    throw new Error(res.data.message || "Failed to update status");
+  }
+
+  // Get all organizations
+  static async getOrganizations(): Promise<Organization[]> {
+    const res = await instance.get<ApiResponse<Organization[]>>("/organizations");
+    if (res.data.success) {
+      return res.data.data || [];
+    }
+    throw new Error(res.data.message || "Failed to fetch organizations");
+  }
+}
+
+// React Hook for using users
+export function useUsers() {
+  const getUsers = UserService.getUsers;
+  const createUser = UserService.createUser;
+  const updateUser = UserService.updateUser;
+  const deleteUser = UserService.deleteUser;
+  const toggleUserStatus = UserService.toggleUserStatus;
+  const getOrganizations = UserService.getOrganizations;
 
   return {
-    users,
-    loading,
-    error,
-    refetch: fetchUsers,
-    total: users.length,
+    getUsers,
     createUser,
     updateUser,
     deleteUser,
     toggleUserStatus,
+    getOrganizations,
   };
 }

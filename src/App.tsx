@@ -17,7 +17,6 @@ import Pricing from "./pages/Pricing";
 import Features from "./pages/Features";
 import WebsiteContent from "./pages/WebsiteContent";
 import HelpSupport from "./pages/HelpSupport";
-import Analytics from "./pages/Analytics";
 import Security from "./pages/Security";
 import EmailTriggers from "./pages/EmailTriggers";
 import AIAutomation from "./pages/AIAutomation";
@@ -76,7 +75,6 @@ const App = () => (
                 <Route path="/features" element={<Features />} />
                 <Route path="/website-content" element={<WebsiteContent />} />
                 <Route path="/help" element={<HelpSupport />} />
-                <Route path="/analytics" element={<Analytics />} />
                 <Route path="/security" element={<Security />} />
                 <Route path="/email-triggers" element={<EmailTriggers />} />
                 <Route path="/ai-automation" element={<AIAutomation />} />
