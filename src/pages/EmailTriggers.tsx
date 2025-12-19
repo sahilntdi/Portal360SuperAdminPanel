@@ -75,11 +75,11 @@ const EmailTriggers = () => {
         action={
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={fetchTriggers}>
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-4 w-4" />
               Refresh
             </Button>
             <Button onClick={() => setAddOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4" />
               Add Trigger
             </Button>
           </div>

@@ -25,7 +25,7 @@ export function TestimonialAddDialog({ open, onClose, onSubmit }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Testimonial</DialogTitle>
         </DialogHeader>
