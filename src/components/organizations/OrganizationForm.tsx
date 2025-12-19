@@ -20,15 +20,15 @@ import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { 
-  Check, 
-  ChevronRight, 
-  ChevronLeft, 
-  Loader2, 
-  Mail, 
-  User, 
-  Building2, 
-  CreditCard, 
+import {
+  Check,
+  ChevronRight,
+  ChevronLeft,
+  Loader2,
+  Mail,
+  User,
+  Building2,
+  CreditCard,
   Users,
   Lock
 } from "lucide-react";
@@ -40,21 +40,21 @@ import type { CreateOrganizationData, Organization, UpdateOrganizationData } fro
 const organizationSchema = z.object({
   // Step 1
   email: z.string().email("Valid email required"),
-  
+
   // Step 2
   firstName: z.string().min(2, "First name must be at least 2 characters"),
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal('')),
-  
+
   // Step 3
   businessName: z.string().min(3, "Business name required"),
-  
+
   // Step 4
   practiceName: z.string().min(1, "Practice name required"),
-  
+
   // Step 5
   nature: z.array(z.string()).min(1, "Select at least one business nature"),
-  
+
   // Step 6
   structure: z.object({
     partners: z.string().min(1, "Required"),
@@ -66,7 +66,7 @@ const organizationSchema = z.object({
     clients: z.string().min(1, "Required"),
     clientsOther: z.string().optional(),
   }),
-  
+
   // Step 7
   plan: z.string().min(1, "Select a plan"),
   paymentOption: z.enum(["unpaid", "alreadyPaid"], {
@@ -134,16 +134,16 @@ function suggestBusinessNames(email = '', nature: string[] = []) {
   return Array.from(suggestions).slice(0, 5);
 }
 
-export function OrganizationForm({ 
-  initialData, 
-  onSubmit, 
-  loading = false, 
+export function OrganizationForm({
+  initialData,
+  onSubmit,
+  loading = false,
   mode = "add",
-  onCancel 
+  onCancel
 }: OrganizationFormProps) {
   const [step, setStep] = useState(1);
   const { plans, loading: plansLoading } = usePricingPlans();
-  
+
   const isEditMode = mode === "edit";
   const showPasswordField = mode === "add";
 
@@ -177,7 +177,7 @@ export function OrganizationForm({
   const watchNature = form.watch("nature");
   const watchStructure = form.watch("structure");
 
-  const suggestions = useMemo(() => 
+  const suggestions = useMemo(() =>
     suggestBusinessNames(watchEmail, watchNature),
     [watchEmail, watchNature]
   );
@@ -194,11 +194,10 @@ export function OrganizationForm({
               <button
                 type="button"
                 onClick={() => form.setValue(`structure.${field}`, b, { shouldValidate: true })}
-                className={`w-full p-3 rounded-lg border text-center transition-all ${
-                  value === b
+                className={`w-full p-3 rounded-lg border text-center transition-all ${value === b
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border hover:border-primary/50"
-                }`}
+                  }`}
               >
                 {b}
               </button>
@@ -217,26 +216,37 @@ export function OrganizationForm({
     );
   };
 
-  const handleSubmitForm = async (data: OrganizationFormValues) => {
-    const submitData: CreateOrganizationData | UpdateOrganizationData = {
-      ...data,
-      businessNameChoice: data.businessName,
-      practiceNameChoice: data.practiceName,
-      clientsRange: data.clientsRange || data.structure.clients,
-    };
+const handleSubmitForm = async (data: OrganizationFormValues) => {
+  const submitData: CreateOrganizationData | UpdateOrganizationData = {
+    ...data,
 
-    await onSubmit(submitData);
+    // ✅ sirf selected option true jayega
+    ...(data.paymentOption === "alreadyPaid" && { alreadyPaid: true }),
+    ...(data.paymentOption === "unpaid" && { unpaid: true }),
+
+    // ❌ string field bilkul nahi bhejna
+    paymentOption: undefined,
+
+    businessNameChoice: data.businessName,
+    practiceNameChoice: data.practiceName,
+    clientsRange: data.clientsRange || data.structure.clients,
   };
 
+  await onSubmit(submitData);
+};
+
+
+
+
   const canProceedToStep2 = form.watch("email") && form.watch("email").includes("@");
-  const canProceedToStep3 = form.watch("firstName") && form.watch("lastName") && 
+  const canProceedToStep3 = form.watch("firstName") && form.watch("lastName") &&
     (showPasswordField ? form.watch("password") : true);
   const canProceedToStep4 = form.watch("businessName");
   const canProceedToStep5 = form.watch("practiceName");
   const canProceedToStep6 = form.watch("nature").length > 0;
-  const canProceedToStep7 = form.watch("structure.partners") && 
-    form.watch("structure.admin") && 
-    form.watch("structure.accountants") && 
+  const canProceedToStep7 = form.watch("structure.partners") &&
+    form.watch("structure.admin") &&
+    form.watch("structure.accountants") &&
     form.watch("structure.clients");
   const canSubmit = form.watch("plan") && form.watch("paymentOption");
 
@@ -251,7 +261,7 @@ export function OrganizationForm({
                 {isEditMode ? "Update Email Address" : "What is your email address?"}
               </CardTitle>
               <CardDescription>
-                {isEditMode 
+                {isEditMode
                   ? `Current email: ${initialData?.email}`
                   : "Use your work or business email."
                 }
@@ -349,7 +359,7 @@ export function OrganizationForm({
                 {isEditMode ? "Update Business Name" : "What is your business name?"}
               </CardTitle>
               <CardDescription>
-                {isEditMode 
+                {isEditMode
                   ? `Current: ${initialData?.businessName}`
                   : "We can suggest names from your email and industry — choose or type your own."
                 }
@@ -453,11 +463,10 @@ export function OrganizationForm({
                       }
                     }}
                     disabled={o.comingSoon}
-                    className={`p-4 rounded-lg border text-left relative transition-all ${
-                      form.watch("nature").includes(o.id)
+                    className={`p-4 rounded-lg border text-left relative transition-all ${form.watch("nature").includes(o.id)
                         ? 'border-primary bg-primary/10 shadow-sm'
                         : 'border-border hover:border-primary/50'
-                    } ${o.comingSoon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      } ${o.comingSoon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <div className="font-medium text-sm">{o.label}</div>
                     {o.comingSoon && (
@@ -525,11 +534,10 @@ export function OrganizationForm({
                   {plans.map((p) => (
                     <Card
                       key={p._id}
-                      className={`cursor-pointer transition-all hover:shadow-lg ${
-                        form.watch("plan") === p._id
+                      className={`cursor-pointer transition-all hover:shadow-lg ${form.watch("plan") === p._id
                           ? 'border-primary ring-2 ring-primary/20'
                           : 'border-border'
-                      }`}
+                        }`}
                       onClick={() => form.setValue("plan", p._id)}
                     >
                       <CardHeader>
@@ -630,11 +638,10 @@ export function OrganizationForm({
         <div className="flex items-center justify-between mb-6">
           {[1, 2, 3, 4, 5, 6, 7].map((s) => (
             <div key={s} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                step === s ? 'bg-primary text-primary-foreground' :
-                step > s ? 'bg-green-500 text-white' :
-                'bg-muted text-muted-foreground'
-              }`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === s ? 'bg-primary text-primary-foreground' :
+                  step > s ? 'bg-green-500 text-white' :
+                    'bg-muted text-muted-foreground'
+                }`}>
                 {step > s ? <Check className="h-4 w-4" /> : s}
               </div>
               {s < 7 && (
@@ -672,7 +679,7 @@ export function OrganizationForm({
                   () => canProceedToStep6,
                   () => canProceedToStep7,
                 ][step - 1];
-                
+
                 if (validations()) {
                   setStep(step + 1);
                 }

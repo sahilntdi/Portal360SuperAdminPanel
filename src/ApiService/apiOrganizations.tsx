@@ -1,10 +1,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import instance from "@/utils/axios";
-import type { 
-  Organization, 
-  CreateOrganizationData, 
-  UpdateOrganizationData 
+import type {
+  Organization,
+  CreateOrganizationData,
+  UpdateOrganizationData
 } from "@/types/organizations";
 
 interface OrganizationsResponse {
@@ -36,9 +36,9 @@ export function useOrganizations(): UseOrganizationsReturn {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await instance.get<OrganizationsResponse>("/organizations");
-      
+
       if (response.data.success && response.data.data) {
         setOrganizations(response.data.data);
         setTotal(response.data.total || response.data.data.length);
@@ -54,48 +54,87 @@ export function useOrganizations(): UseOrganizationsReturn {
     }
   }, []);
 
-  const createOrganization = async (data: CreateOrganizationData): Promise<Organization> => {
+  const createOrganization = async (
+    data: CreateOrganizationData
+  ): Promise<Organization> => {
     try {
-      const response = await instance.post("https://portal360v2-gpamdychg2hgbbf6.australiaeast-01.azurewebsites.net/api/V2/auth/register", {
-        ...data,
-        planName: data.paymentOption === 'alreadyPaid' ? data.plan : undefined
-      });
-      
-      if (response.data.success && response.data.data) {
-        await fetchOrganizations();
-        return response.data.data;
+      const response = await fetch(
+        "https://portal360v2-gpamdychg2hgbbf6.australiaeast-01.azurewebsites.net/api/V2/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // Authorization: `Bearer ${token}`, // add if required
+          },
+          body: JSON.stringify({
+            ...data,
+            planName: data.paymentOption === "alreadyPaid" ? data.plan : undefined,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.message || "Failed to create organization");
       }
+
+      if (result.success && result.data) {
+        await fetchOrganizations();
+        return result.data;
+      }
+
       throw new Error("Failed to create organization");
     } catch (err: any) {
-      const message = err.response?.data?.message || "Failed to create organization";
-      throw new Error(message);
+      throw new Error(err.message || "Failed to create organization");
     }
   };
 
-  const updateOrganization = async (id: string, data: UpdateOrganizationData): Promise<Organization> => {
-    try {
-      const response = await instance.patch(`https://portal360v2-gpamdychg2hgbbf6.australiaeast-01.azurewebsites.net/api/V2/auth/user`, data);
-      
 
-      if (response.data.success && response.data.data) {
-        setOrganizations(prev => 
-          prev.map(org => org._id === id ? response.data.data : org)
-        );
-        return response.data.data;
+  const updateOrganization = async (
+    id: string,
+    data: UpdateOrganizationData
+  ): Promise<Organization> => {
+    try {
+      const response = await fetch(
+        "https://portal360v2-gpamdychg2hgbbf6.australiaeast-01.azurewebsites.net/api/V2/auth/user",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            // If you are using auth token, keep this
+            // Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.message || "Failed to update organization");
       }
+
+      if (result.success && result.data) {
+        setOrganizations((prev) =>
+          prev.map((org) => (org._id === id ? result.data : org))
+        );
+        return result.data;
+      }
+
       throw new Error("Failed to update organization");
     } catch (err: any) {
-      const message = err.response?.data?.message || "Failed to update organization";
-      throw new Error(message);
+      throw new Error(err.message || "Failed to update organization");
     }
   };
+
 
   const changeStatus = async (id: string, status: string): Promise<Organization> => {
     try {
       const response = await instance.patch(`/organizations/${id}/status`, { status });
-      
+
       if (response.data.success && response.data.data) {
-        setOrganizations(prev => 
+        setOrganizations(prev =>
           prev.map(org => org._id === id ? response.data.data : org)
         );
         return response.data.data;

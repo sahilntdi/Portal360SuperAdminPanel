@@ -24,8 +24,10 @@ export function OrganizationEditDialog({
 
   const handleSubmit = async (data: UpdateOrganizationData) => {
     if (!organization) return;
-    
+
     try {
+      console.log("EDIT ORGANIZATION ID 👉", organization._id);
+      console.log("EDIT ORGANIZATION PAYLOAD 👉", data);
       setLoading(true);
       await updateOrganization(organization._id, data);
       toast.success("Organization updated successfully!");

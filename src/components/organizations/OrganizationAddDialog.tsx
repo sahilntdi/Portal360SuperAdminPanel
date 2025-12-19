@@ -19,6 +19,7 @@ export function OrganizationAddDialog({ onSuccess }: OrganizationAddDialogProps)
 
   const handleSubmit = async (data: CreateOrganizationData) => {
     try {
+      console.log("CREATE ORGANIZATION PAYLOAD 👉", data);
       setLoading(true);
       await createOrganization(data);
       toast.success("Organization created successfully!");
