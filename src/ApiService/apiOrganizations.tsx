@@ -160,7 +160,7 @@ export function useOrganizations(): UseOrganizationsReturn {
   const deleteOrganization = async (email: string): Promise<void> => {
     try {
       const response = await fetch(
-        `https://portal360v2-gpamdychg2hgbbf6.australiaeast-01.azurewebsites.net/api/V2/tenant/auth/delete/${email}`,
+        `https://portal360v2-gpamdychg2hgbbf6.australiaeast-01.azurewebsites.net/api/V2/auth/delete/${email}`,
         {
           method: "DELETE",
           headers: {

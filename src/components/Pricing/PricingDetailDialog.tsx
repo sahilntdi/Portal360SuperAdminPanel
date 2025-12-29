@@ -212,12 +212,7 @@ export default function PricingDetailDialog({ open, item, onClose }: PricingDeta
             <Button variant="outline" onClick={onClose}>
               Close
             </Button>
-            {item.planId && (
-              <Button variant="outline">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                View in Stripe
-              </Button>
-            )}
+           
           </div>
         </div>
       </DialogContent>

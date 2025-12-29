@@ -57,11 +57,11 @@ instance.interceptors.response.use(
 
     console.log("❌ API ERROR:", status);
 
-    if (status === 401) {
-      document.cookie =
-        "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      window.location.href = "/auth";
-    }
+    // if (status === 401) {
+    //   document.cookie =
+    //     "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    //   window.location.href = "/auth";
+    // }
 
     return Promise.reject(error);
   }

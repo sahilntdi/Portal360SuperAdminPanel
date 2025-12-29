@@ -88,7 +88,7 @@ export const login = createAsyncThunk(
       return response;
     } catch (err: any) {
       console.error("❌ Login error:", err);
-      return rejectWithValue(err.message || "Login failed");
+      return rejectWithValue(err.error || "Login failed");
     }
   }
 );
