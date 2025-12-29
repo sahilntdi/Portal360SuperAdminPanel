@@ -146,16 +146,52 @@ export function useOrganizations(): UseOrganizationsReturn {
     }
   };
 
-  const deleteOrganization = async (id: string): Promise<void> => {
+  // const deleteOrganization = async (id: string): Promise<void> => {
+  //   try {
+  //     await instance.delete(`/organizations/${id}`);
+  //     setOrganizations(prev => prev.filter(org => org._id !== id));
+  //     setTotal(prev => prev - 1);
+  //   } catch (err: any) {
+  //     const message = err.response?.data?.message || "Failed to delete organization";
+  //     throw new Error(message);
+  //   }
+  // };
+
+  const deleteOrganization = async (email: string): Promise<void> => {
     try {
-      await instance.delete(`/organizations/${id}`);
-      setOrganizations(prev => prev.filter(org => org._id !== id));
-      setTotal(prev => prev - 1);
+      const response = await fetch(
+        `https://portal360v2-gpamdychg2hgbbf6.australiaeast-01.azurewebsites.net/api/V2/tenant/auth/delete/${email}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            // Authorization: `Bearer ${token}`, // agar required ho
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.message || "Failed to delete organization");
+      }
+
+      if (result.success) {
+        // ✅ email ke base par state update
+        setOrganizations(prev =>
+          prev.filter(org => org.email !== email)
+        );
+        setTotal(prev => Math.max(prev - 1, 0));
+        return;
+      }
+
+      throw new Error("Failed to delete organization");
     } catch (err: any) {
-      const message = err.response?.data?.message || "Failed to delete organization";
-      throw new Error(message);
+      throw new Error(err.message || "Failed to delete organization");
     }
   };
+
+
 
   const getOrganizationById = (id: string): Organization | undefined => {
     return organizations.find(org => org._id === id);

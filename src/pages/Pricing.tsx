@@ -31,7 +31,6 @@ export default function Pricing() {
     try {
       const res = await getPricing();
       const plans = res.data || [];
-      console.log("Pricing Plans1:", plans);
       setStats({
         totalPlans: plans.length,
         activePlans: plans.filter(p => p.isActive).length,
@@ -72,7 +71,6 @@ const filteredData = React.useMemo(() => {
       description: "Pricing data updated",
     });
   };
-console.log("Pricing Stats:", stats);
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

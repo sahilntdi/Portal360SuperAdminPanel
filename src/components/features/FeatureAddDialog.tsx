@@ -16,7 +16,7 @@ function FeatureAddDialog({ open, onClose, onSuccess }) {
       onSuccess?.();
       onClose();
     } catch (err) {
-      toast({ variant: "destructive", title: "Error", description: err?.message || "Failed" });
+      toast({ variant: "destructive", title: "Error", description: err?.error || "Failed" });
     }
   };
 

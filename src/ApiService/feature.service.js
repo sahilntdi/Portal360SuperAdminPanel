@@ -17,5 +17,5 @@ export const updateFeature = (id, payload) => {
 
 // 📌 Delete feature by ID
 export const deleteFeature = (id) => {
-  return deleteRequest(`features/${id}`);
+  return deleteRequest(`features/delete/${id}`);
 };

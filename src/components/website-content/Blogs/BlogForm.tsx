@@ -32,9 +32,8 @@ export function BlogForm({ formData, setFormData, preview, setPreview }) {
 
   return (
     <div className="space-y-4">
-
       <div>
-        <Label>Title *</Label>
+        <Label>Title <span className="text-red-600 font-bold">*</span></Label>
         <Input
           value={formData.title}
           onChange={(e) => handleChange("title", e.target.value)}
@@ -42,7 +41,7 @@ export function BlogForm({ formData, setFormData, preview, setPreview }) {
       </div>
 
       <div>
-        <Label>Excerpt *</Label>
+        <Label>Excerpt <span className="text-red-600 font-bold">*</span></Label>
         <Textarea
           rows={2}
           value={formData.excerpt}
@@ -51,7 +50,7 @@ export function BlogForm({ formData, setFormData, preview, setPreview }) {
       </div>
 
       <div>
-        <Label>Content *</Label>
+        <Label>Content <span className="text-red-600 font-bold">*</span></Label>
         <Textarea
           rows={6}
           value={formData.content}
@@ -61,7 +60,7 @@ export function BlogForm({ formData, setFormData, preview, setPreview }) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label>Date</Label>
+          <Label>Date <span className="text-red-600 font-bold">*</span></Label>
           <Input
             type="date"
             value={formData.date}
@@ -70,7 +69,7 @@ export function BlogForm({ formData, setFormData, preview, setPreview }) {
         </div>
 
         <div>
-          <Label>Read Time</Label>
+          <Label>Read Time <span className="text-red-600 font-bold">*</span></Label>
           <Input
             value={formData.readTime}
             onChange={(e) => handleChange("readTime", e.target.value)}
@@ -80,7 +79,7 @@ export function BlogForm({ formData, setFormData, preview, setPreview }) {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label>Category</Label>
+          <Label>Category <span className="text-red-600 font-bold">*</span></Label>
           <Input
             value={formData.category}
             onChange={(e) => handleChange("category", e.target.value)}
@@ -88,19 +87,21 @@ export function BlogForm({ formData, setFormData, preview, setPreview }) {
         </div>
 
         <div>
-          <Label>Slug</Label>
+          <Label>Slug <span className="text-red-600 font-bold">*</span></Label>
           <Input
             value={formData.slug}
             onChange={(e) =>
-              handleChange("slug", e.target.value.toLowerCase().replace(/\s+/g, "-"))
+              handleChange(
+                "slug",
+                e.target.value.toLowerCase().replace(/\s+/g, "-")
+              )
             }
           />
         </div>
       </div>
 
-      {/* IMAGE UPLOAD ONLY */}
       <div>
-        <Label>Upload Image</Label>
+        <Label>Upload Image <span className="text-red-600 font-bold">*</span></Label>
         <Input
           type="file"
           accept="image/*"

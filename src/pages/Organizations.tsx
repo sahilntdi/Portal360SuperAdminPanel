@@ -71,7 +71,7 @@ const Organizations = () => {
   const handleStatusChange = async (id: string, status: string) => {
     try {
       await changeStatus(id, status);
-      toast.success(`Organization ${status === "active" ? "activated" : "suspended"}`);
+      toast.success(`Organization ${status === "active" ? "activated" : "Inactive"}`);
     } catch (err: any) {
       toast.error(err.message || "Failed to change status");
     }
@@ -81,7 +81,7 @@ const Organizations = () => {
     if (!deletingOrg) return;
 
     try {
-      await deleteOrganization(deletingOrg._id);
+      await deleteOrganization(deletingOrg.email);
       toast.success("Organization deleted successfully");
       setDeleteDialogOpen(false);
     } catch (err: any) {
@@ -219,7 +219,7 @@ const Organizations = () => {
         onDelete={async () => {
           if (!deletingOrg) return;
           try {
-            await deleteOrganization(deletingOrg._id); // This will call the API
+            await deleteOrganization(deletingOrg.email); // This will call the API
             toast.success("Organization deleted successfully");
             setDeleteDialogOpen(false);
           } catch (err: any) {

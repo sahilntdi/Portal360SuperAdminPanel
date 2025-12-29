@@ -19,3 +19,8 @@ export const updateEmailTrigger = (id, payload) => {
 export const deleteEmailTrigger = (id) => {
   return deleteRequest(`email-triggers/${id}/delete`);
 };
+
+// 📌 Evens
+export const eventsList = () =>{
+  return getRequest("events");
+}

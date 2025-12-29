@@ -83,7 +83,10 @@ import { MobileHowItWorksCard } from "@/components/website-content/HowItWorks/Mo
 import { MobileIntegrationCard } from "@/components/website-content/Integrations/MobileIntegrationCard";
 
 export default function WebsiteContentPage() {
-  const [activeTab, setActiveTab] = useState("steps");
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("websiteContentActiveTab") || "steps";
+  });
+
   // const [searchQuery, setSearchQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [viewMode, setViewMode] = useState("table"); // "table" or "grid"
@@ -132,6 +135,7 @@ export default function WebsiteContentPage() {
   const [editIntegrationOpen, setEditIntegrationOpen] = useState(false);
   const [deleteIntegrationOpen, setDeleteIntegrationOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState(null);
+
 
   // Check mobile screen size
   useEffect(() => {
@@ -208,35 +212,54 @@ export default function WebsiteContentPage() {
       toast.error("Failed to load Integrations");
     }
   };
+const isDuplicateStepNumber = (stepNumber, currentId = null) => {
+  return steps.some(
+    (s) =>
+      Number(s.stepNumber) === Number(stepNumber) &&
+      s._id !== currentId
+  );
+};
 
   // Handlers
-  const handleAddStep = async (data) => {
-    try {
-      await WebsiteContentService.addStep(data);
-      toast.success("Step added successfully");
-      loadSteps();
-    } catch (error) {
-      toast.error("Failed to add step");
-      console.error(error);
+const handleAddStep = async (data) => {
+  try {
+    if (isDuplicateStepNumber(data.stepNumber)) {
+      toast.error(`Step number ${data.stepNumber} already exists`);
+      return;
     }
-  };
+
+    await WebsiteContentService.addStep(data);
+    toast.success("Step added successfully");
+    loadSteps();
+  } catch (error) {
+    toast.error("Failed to add step");
+    console.error(error);
+  }
+};
+
 
   const handleEditStep = async (data) => {
-    try {
-      // The data should already contain _id from the form
-      const stepId = data._id;
-      if (!stepId) {
-        toast.error("Step ID is required");
-        return;
-      }
-      await WebsiteContentService.updateStep(stepId, data);
-      toast.success("Step updated successfully");
-      loadSteps();
-    } catch (error) {
-      toast.error("Failed to update step");
-      console.error(error);
+  try {
+    const stepId = data._id;
+    if (!stepId) {
+      toast.error("Step ID is required");
+      return;
     }
-  };
+
+    if (isDuplicateStepNumber(data.stepNumber, stepId)) {
+      toast.error(`Step number ${data.stepNumber} already exists`);
+      return;
+    }
+
+    await WebsiteContentService.updateStep(stepId, data);
+    toast.success("Step updated successfully");
+    loadSteps();
+  } catch (error) {
+    toast.error("Failed to update step");
+    console.error(error);
+  }
+};
+
 
   const handleDeleteStep = async (item) => {
     try {
@@ -301,9 +324,9 @@ export default function WebsiteContentPage() {
   // Testimonial Handlers - Add this console logging for debugging
   const handleAddTestimonial = async (data) => {
     try {
-      console.log("Adding testimonial:", data);
+      // console.log("Adding testimonial:", data);
       const response = await WebsiteContentService.addTestimonial(data);
-      console.log("Add testimonial response:", response);
+      // console.log("Add testimonial response:", response);
       toast.success("Testimonial added successfully");
       loadTestimonials();
     } catch (error) {
@@ -314,7 +337,7 @@ export default function WebsiteContentPage() {
 
   const handleEditTestimonial = async (data) => {
     try {
-      console.log("Editing testimonial:", data);
+      // console.log("Editing testimonial:", data);
       const testimonialId = data._id;
       if (!testimonialId) {
         console.error("No _id in testimonial data:", data);
@@ -322,7 +345,7 @@ export default function WebsiteContentPage() {
         return;
       }
       const response = await WebsiteContentService.updateTestimonial(testimonialId, data);
-      console.log("Edit testimonial response:", response);
+      // console.log("Edit testimonial response:", response);
       toast.success("Testimonial updated successfully");
       loadTestimonials();
     } catch (error) {
@@ -333,7 +356,7 @@ export default function WebsiteContentPage() {
 
   const handleDeleteTestimonial = async (item) => {
     try {
-      console.log("Deleting testimonial:", item);
+      // console.log("Deleting testimonial:", item);
       const testimonialId = item._id;
       if (!testimonialId) {
         console.error("No _id in testimonial item:", item);
@@ -341,7 +364,7 @@ export default function WebsiteContentPage() {
         return;
       }
       const response = await WebsiteContentService.deleteTestimonial(testimonialId);
-      console.log("Delete testimonial response:", response);
+      // console.log("Delete testimonial response:", response);
       toast.success("Testimonial deleted successfully");
       loadTestimonials();
     } catch (error) {
@@ -353,9 +376,9 @@ export default function WebsiteContentPage() {
   // Blog Handlers - Add console logging for debugging
   const handleAddBlog = async (data) => {
     try {
-      console.log("Adding blog:", data);
+      // console.log("Adding blog:", data);
       const response = await WebsiteContentService.addBlog(data);
-      console.log("Add blog response:", response);
+      // console.log("Add blog response:", response);
       toast.success("Blog added successfully");
       loadBlogs();
     } catch (error) {
@@ -366,7 +389,7 @@ export default function WebsiteContentPage() {
 
   const handleEditBlog = async (data) => {
     try {
-      console.log("Editing blog:", data);
+      // console.log("Editing blog:", data);
 
       const blogId = data._id;
       if (!blogId) {
@@ -384,11 +407,11 @@ export default function WebsiteContentPage() {
       // Fix date format
       cleanData.date = new Date(cleanData.date).toISOString();
 
-      console.log("Final Clean Data before sending:", cleanData);
+      // console.log("Final Clean Data before sending:", cleanData);
 
       const response = await WebsiteContentService.updateBlog(blogId, cleanData);
 
-      console.log("Edit blog response:", response);
+      // console.log("Edit blog response:", response);
       toast.success("Blog updated successfully");
       loadBlogs();
     } catch (error) {
@@ -400,7 +423,7 @@ export default function WebsiteContentPage() {
 
   const handleDeleteBlog = async (item) => {
     try {
-      console.log("Deleting blog:", item);
+      // console.log("Deleting blog:", item);
       const blogId = item._id;
       if (!blogId) {
         console.error("No _id in blog item:", item);
@@ -408,7 +431,7 @@ export default function WebsiteContentPage() {
         return;
       }
       const response = await WebsiteContentService.deleteBlog(blogId);
-      console.log("Delete blog response:", response);
+      // console.log("Delete blog response:", response);
       toast.success("Blog deleted successfully");
       loadBlogs();
     } catch (error) {
@@ -420,9 +443,9 @@ export default function WebsiteContentPage() {
   // Modern Teams Handlers
   const handleAddModern = async (data) => {
     try {
-      console.log("Adding modern team:", data);
+      // console.log("Adding modern team:", data);
       const response = await WebsiteContentService.addModernTeam(data);
-      console.log("Add modern team response:", response);
+      // console.log("Add modern team response:", response);
       toast.success("Modern Team item added successfully");
       loadModernTeams();
     } catch (error) {
@@ -433,7 +456,7 @@ export default function WebsiteContentPage() {
 
   const handleEditModern = async (data) => {
     try {
-      console.log("Editing modern team:", data);
+      // console.log("Editing modern team:", data);
       const modernId = data._id;
       if (!modernId) {
         console.error("No _id in modern team data:", data);
@@ -441,7 +464,7 @@ export default function WebsiteContentPage() {
         return;
       }
       const response = await WebsiteContentService.updateModernTeam(modernId, data);
-      console.log("Edit modern team response:", response);
+      // console.log("Edit modern team response:", response);
       toast.success("Modern Team item updated successfully");
       loadModernTeams();
     } catch (error) {
@@ -452,7 +475,7 @@ export default function WebsiteContentPage() {
 
   const handleDeleteModern = async (item) => {
     try {
-      console.log("Deleting modern team:", item);
+      // console.log("Deleting modern team:", item);
       const modernId = item._id;
       if (!modernId) {
         console.error("No _id in modern team item:", item);
@@ -460,7 +483,7 @@ export default function WebsiteContentPage() {
         return;
       }
       const response = await WebsiteContentService.deleteModernTeam(modernId);
-      console.log("Delete modern team response:", response);
+      // console.log("Delete modern team response:", response);
       toast.success("Modern Team item deleted successfully");
       loadModernTeams();
     } catch (error) {
@@ -573,7 +596,7 @@ export default function WebsiteContentPage() {
 
   const handleDeleteIntegration = async (item) => {
     try {
-      console.log("Deleting integration:", item);
+      // console.log("Deleting integration:", item);
       const integrationId = item._id;
       if (!integrationId) {
         console.error("No _id in integration item:", item);
@@ -582,7 +605,7 @@ export default function WebsiteContentPage() {
       }
 
       const response = await WebsiteContentService.deleteIntegration(integrationId);
-      console.log("Delete integration response:", response);
+      // console.log("Delete integration response:", response);
 
       toast.success("Integration deleted successfully");
       loadIntegrations();
@@ -811,7 +834,7 @@ export default function WebsiteContentPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 lg:py-10 space-y-4 sm:space-y-6 md:space-y-8">
+      <div className="mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-1 space-y-4 sm:space-y-6 md:space-y-1">
 
         {/* Header - Responsive */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
@@ -860,7 +883,10 @@ export default function WebsiteContentPage() {
           </CardHeader>
 
           <CardContent className="px-3 sm:px-6 pt-0">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+            <Tabs value={activeTab} onValueChange={(value) => {
+              setActiveTab(value);
+              localStorage.setItem("websiteContentActiveTab", value);
+            }} className="space-y-4 sm:space-y-6">
               {/* Tabs Navigation - Responsive */}
               <ScrollArea className="w-full">
                 <TabsList className="inline-flex w-auto h-auto bg-muted/30 p-1 rounded-lg">
@@ -1038,7 +1064,7 @@ export default function WebsiteContentPage() {
       </div>
 
       {/* Dialogs */}
-      <HowItWorksAddDialog open={addStepOpen} onClose={() => setAddStepOpen(false)} onSubmit={handleAddStep} />
+      <HowItWorksAddDialog open={addStepOpen} onClose={() => setAddStepOpen(false)} onSubmit={handleAddStep}  steps={steps} />
       <HowItWorksEditDialog open={editStepOpen} item={selectedStep} onClose={() => setEditStepOpen(false)} onSubmit={handleEditStep} />
       <HowItWorksDeleteDialog
         open={deleteStepOpen}

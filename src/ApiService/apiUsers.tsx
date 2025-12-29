@@ -103,7 +103,7 @@ export class UserService {
 
   // Delete a user (deactivate)
   static async deleteUser(id: string): Promise<void> {
-    const res = await instance.patch<ApiResponse<void>>(`/user/${id}/deactivate`);
+    const res = await instance.delete<ApiResponse<void>>(`/user/${id}`);
     if (!res.data.success) {
       throw new Error(res.data.message || "Failed to delete user");
     }

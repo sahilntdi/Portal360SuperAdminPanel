@@ -1,206 +1,170 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { Shield, Lock, AlertTriangle, Users, Activity } from "lucide-react";
-import { securityAlerts, adminRoles, auditLogs } from "@/data/data";
+import SecurityStats from "@/components/security/SecurityStats";
+import SecurityTable from "@/components/security/SecurityTable";
+import { getSecurityFeatures } from "@/ApiService";
+import { SecurityFeature } from "@/components/security/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Shield, Lock, Eye, AlertCircle, RefreshCw } from "lucide-react";
 
 export default function Security() {
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Security & Audit"
-        description="Monitor system security, audit logs, and manage admin access"
-      />
+  const [data, setData] = useState<SecurityFeature[]>([]);
+  const [loading, setLoading] = useState(true);
 
-      <div className="grid gap-6 md:grid-cols-4">
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await getSecurityFeatures();
+      // Handle both array and single object responses
+      if (Array.isArray(res.data)) {
+        setData(res.data);
+      } else if (res.data && typeof res.data === 'object' && res.data._id) {
+        // If single object is returned, wrap it in array
+        setData([res.data]);
+      } else {
+        setData([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch security features:", error);
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-6 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+
+        {/* Stats Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  </div>
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-3 w-40" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Table Skeleton */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Admins</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-10 w-20" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">4</div>
-            <p className="text-xs text-muted-foreground">3 online now</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Audit Events</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">1,247</div>
-            <p className="text-xs text-success">+23 today</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Security Alerts</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">3</div>
-            <p className="text-xs text-warning">2 require attention</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Failed Logins</CardTitle>
-            <Lock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">18</div>
-            <p className="text-xs text-muted-foreground">Last 24 hours</p>
+            <Skeleton className="h-10 w-full mb-4" />
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
+    );
+  }
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" />
-                Security Alerts
-              </CardTitle>
-              <CardDescription>Recent security events requiring attention</CardDescription>
-            </div>
-            <Button variant="outline">View All Alerts</Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Message</TableHead>
-                <TableHead>Organization</TableHead>
-                <TableHead>Severity</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Count</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {securityAlerts.map((alert) => (
-                <TableRow key={alert.id}>
-                  <TableCell>
-                    <Badge variant={alert.severity === "high" ? "destructive" : alert.severity === "medium" ? "secondary" : "outline"}>
-                      {alert.type}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">{alert.type}</TableCell>
-                  <TableCell>{alert.organization}</TableCell>
-                  <TableCell>
-                    <Badge variant={alert.severity === "high" ? "destructive" : alert.severity === "medium" ? "secondary" : "outline"}>
-                      {alert.severity}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{alert.time}</TableCell>
-                  <TableCell>
-                    <span className="text-sm font-medium">{alert.count}x</span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Investigate</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+  return (
+    <div className="space-y-6 p-6">
+      <PageHeader
+        title="Security & Audit"
+        description="Monitor and manage security configurations, audit logs, and system protection"
+      />
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Admin Role Management
-              </CardTitle>
-              <CardDescription>Manage superadmin and sub-admin permissions</CardDescription>
-            </div>
-            <Button>Add Admin</Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Permissions</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Active</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {adminRoles.map((admin) => (
-                <TableRow key={admin.id}>
-                  <TableCell className="font-medium">{admin.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{admin.email}</TableCell>
-                  <TableCell>
-                    <Badge variant="default">{admin.role}</Badge>
-                  </TableCell>
-                  <TableCell>{admin.permissions}</TableCell>
-                  <TableCell>
-                    <Badge variant={admin.status === "active" ? "default" : "secondary"}>
-                      {admin.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{admin.lastActive}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Edit</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <SecurityStats data={data} />
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Audit Log</CardTitle>
-              <CardDescription>Complete history of administrative actions</CardDescription>
+      <SecurityTable data={data} refresh={fetchData} />
+
+      {/* Security Status Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Security Status Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Active Features</span>
+                <span className="font-semibold">
+                  {data.filter(f => f.isActive).length} / {data.length}
+                </span>
+              </div>
+              <div className="space-y-2">
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-green-500 transition-all duration-300"
+                    style={{ 
+                      width: `${(data.filter(f => f.isActive).length / Math.max(data.length, 1)) * 100}%` 
+                    }}
+                  />
+                </div>
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>{data.filter(f => f.isActive).length} active</span>
+                  <span>{data.filter(f => !f.isActive).length} inactive</span>
+                </div>
+              </div>
             </div>
-            <Button variant="outline">Export Logs</Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Action</TableHead>
-                <TableHead>Performed By</TableHead>
-                <TableHead>Target</TableHead>
-                <TableHead>Timestamp</TableHead>
-                <TableHead>IP Address</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {auditLogs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="font-medium">{log.action}</TableCell>
-                  <TableCell className="text-muted-foreground">{log.admin}</TableCell>
-                  <TableCell>{log.action}</TableCell>
-                  <TableCell className="text-muted-foreground whitespace-nowrap">{log.timestamp}</TableCell>
-                  <TableCell className="text-muted-foreground">{log.ipAddress}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full justify-start"
+                onClick={fetchData}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Refresh Security Data
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <Lock className="mr-2 h-4 w-4" />
+                View Audit Logs
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <Eye className="mr-2 h-4 w-4" />
+                Security Settings
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

@@ -30,49 +30,152 @@ import {
   Building2,
   CreditCard,
   Users,
-  Lock
+  Lock,
+  AlertCircle
 } from "lucide-react";
 import OptionCard from "@/utils/OptionCard";
 import { usePricingPlans } from "@/ApiService/PricingPlans";
 import type { CreateOrganizationData, Organization, UpdateOrganizationData } from "@/types/organizations";
 
-// Form Schema
+// Enhanced Form Schema with better validation
 const organizationSchema = z.object({
   // Step 1
-  email: z.string().email("Valid email required"),
+  email: z.string()
+    .min(1, "Email is required")
+    .email("Please enter a valid email address")
+    .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, "Invalid email format"),
 
   // Step 2
-  firstName: z.string().min(2, "First name must be at least 2 characters"),
-  lastName: z.string().min(2, "Last name must be at least 2 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal('')),
+  firstName: z.string()
+    .min(1, "First name is required")
+    .min(2, "First name must be at least 2 characters")
+    .max(50, "First name cannot exceed 50 characters")
+    .regex(/^[a-zA-Z\s\-']+$/, "First name can only contain letters, spaces, hyphens, and apostrophes"),
+
+  lastName: z.string()
+    .min(1, "Last name is required")
+    .min(2, "Last name must be at least 2 characters")
+    .max(50, "Last name cannot exceed 50 characters")
+    .regex(/^[a-zA-Z\s\-']+$/, "Last name can only contain letters, spaces, hyphens, and apostrophes"),
+
+  password: z.union([
+    z.string().min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number")
+      .regex(/[^A-Za-z0-9]/, "Password must contain at least one special character")
+      .max(50, "Password cannot exceed 50 characters"),
+    z.literal('').optional()
+  ]),
 
   // Step 3
-  businessName: z.string().min(3, "Business name required"),
+  businessName: z.string()
+    .min(1, "Business name is required")
+    .min(3, "Business name must be at least 3 characters")
+    .max(100, "Business name cannot exceed 100 characters")
+    .regex(/^[a-zA-Z0-9\s\-'&.,]+$/, "Business name contains invalid characters"),
 
   // Step 4
-  practiceName: z.string().min(1, "Practice name required"),
+  practiceName: z.string()
+    .min(1, "Practice name is required")
+    .min(2, "Practice name must be at least 2 characters")
+    .max(100, "Practice name cannot exceed 100 characters")
+    .regex(/^[a-zA-Z0-9\s\-'&.,]+$/, "Practice name contains invalid characters"),
 
   // Step 5
-  nature: z.array(z.string()).min(1, "Select at least one business nature"),
+  nature: z.array(z.string())
+    .min(1, "Please select at least one business nature")
+    .max(5, "You can select up to 5 business natures"),
 
   // Step 6
   structure: z.object({
-    partners: z.string().min(1, "Required"),
-    partnersOther: z.string().optional(),
-    admin: z.string().min(1, "Required"),
-    adminOther: z.string().optional(),
-    accountants: z.string().min(1, "Required"),
-    accountantsOther: z.string().optional(),
-    clients: z.string().min(1, "Required"),
-    clientsOther: z.string().optional(),
+    partners: z.string()
+      .min(1, "Please select number of partners")
+      .refine(val => val === "Other" || BRACKETS.includes(val), {
+        message: "Invalid selection for partners"
+      }),
+    partnersOther: z.string()
+      .optional()
+      .refine(val => !val || (parseInt(val) >= 0 && parseInt(val) <= 1000), {
+        message: "Partners must be between 0 and 1000"
+      }),
+    admin: z.string()
+      .min(1, "Please select number of admin staff")
+      .refine(val => val === "Other" || BRACKETS.includes(val), {
+        message: "Invalid selection for admin staff"
+      }),
+    adminOther: z.string()
+      .optional()
+      .refine(val => !val || (parseInt(val) >= 0 && parseInt(val) <= 1000), {
+        message: "Admin staff must be between 0 and 1000"
+      }),
+    accountants: z.string()
+      .min(1, "Please select number of accountants")
+      .refine(val => val === "Other" || BRACKETS.includes(val), {
+        message: "Invalid selection for accountants"
+      }),
+    accountantsOther: z.string()
+      .optional()
+      .refine(val => !val || (parseInt(val) >= 0 && parseInt(val) <= 1000), {
+        message: "Accountants must be between 0 and 1000"
+      }),
+    clients: z.string()
+      .min(1, "Please select number of clients")
+      .refine(val => val === "Other" || BRACKETS.includes(val), {
+        message: "Invalid selection for clients"
+      }),
+    clientsOther: z.string()
+      .optional()
+      .refine(val => !val || (parseInt(val) >= 0 && parseInt(val) <= 10000), {
+        message: "Clients must be between 0 and 10,000"
+      }),
+  }).refine(data => {
+    // Validate that if "Other" is selected, the other field must be filled
+    if (data.partners === "Other" && (!data.partnersOther || data.partnersOther.trim() === "")) {
+      return false;
+    }
+    if (data.admin === "Other" && (!data.adminOther || data.adminOther.trim() === "")) {
+      return false;
+    }
+    if (data.accountants === "Other" && (!data.accountantsOther || data.accountantsOther.trim() === "")) {
+      return false;
+    }
+    if (data.clients === "Other" && (!data.clientsOther || data.clientsOther.trim() === "")) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "Please provide a number when selecting 'Other'",
+    path: ["structure"]
   }),
 
   // Step 7
-  plan: z.string().min(1, "Select a plan"),
+  plan: z.string()
+    .min(1, "Please select a plan")
+    .regex(/^[a-fA-F0-9]{24}$/, "Invalid plan ID format"), // Assuming MongoDB ObjectId
+
   paymentOption: z.enum(["unpaid", "alreadyPaid"], {
-    required_error: "Select a payment option",
+    required_error: "Please select a payment option",
+    invalid_type_error: "Invalid payment option"
   }),
-  clientsRange: z.string().optional(),
+
+  clientsRange: z.string()
+    .optional()
+    .refine(val => !val || (parseInt(val) >= 0 && parseInt(val) <= 10000), {
+      message: "Clients range must be between 0 and 10,000"
+    }),
+}).superRefine((data, ctx) => {
+  // Cross-field validation
+  if (data.paymentOption === "alreadyPaid" && data.plan === "") {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "You must select a plan if you have already paid",
+      path: ["plan"]
+    });
+  }
+
+  // Validate that password is provided in add mode
+  // (This will be handled in the component logic)
 });
 
 type OrganizationFormValues = z.infer<typeof organizationSchema>;
@@ -142,6 +245,7 @@ export function OrganizationForm({
   onCancel
 }: OrganizationFormProps) {
   const [step, setStep] = useState(1);
+  const [stepErrors, setStepErrors] = useState<{ [key: number]: string[] }>({});
   const { plans, loading: plansLoading } = usePricingPlans();
 
   const isEditMode = mode === "edit";
@@ -149,6 +253,8 @@ export function OrganizationForm({
 
   const form = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationSchema),
+    mode: "onChange",
+    reValidateMode: "onChange",
     defaultValues: {
       email: initialData?.email || "",
       firstName: initialData?.firstName || "",
@@ -176,27 +282,94 @@ export function OrganizationForm({
   const watchEmail = form.watch("email");
   const watchNature = form.watch("nature");
   const watchStructure = form.watch("structure");
+  const watchPassword = form.watch("password");
+  const watchBusinessName = form.watch("businessName");
+  const watchPracticeName = form.watch("practiceName");
 
   const suggestions = useMemo(() =>
     suggestBusinessNames(watchEmail, watchNature),
     [watchEmail, watchNature]
   );
 
+  const validateStep = async (stepNumber: number): Promise<boolean> => {
+    const fieldsToValidate: { [key: number]: (keyof OrganizationFormValues)[] } = {
+      1: ['email'],
+      2: ['firstName', 'lastName', ...(showPasswordField ? ['password'] : [])],
+      3: ['businessName'],
+      4: ['practiceName'],
+      5: ['nature'],
+      6: ['structure'],
+      7: ['plan', 'paymentOption'],
+    };
+
+    const fields = fieldsToValidate[stepNumber];
+    const result = await form.trigger(fields as any);
+
+    // Collect errors for this step
+    const errors: string[] = [];
+    fields.forEach(field => {
+      const error = form.getFieldState(field as any).error?.message;
+      if (error) errors.push(error);
+    });
+
+    setStepErrors(prev => ({ ...prev, [stepNumber]: errors }));
+
+    return result;
+  };
+
+  const handleNextStep = async () => {
+    const isValid = await validateStep(step);
+    if (isValid) {
+      setStep(step + 1);
+      // Clear errors for current step when moving forward
+      setStepErrors(prev => ({ ...prev, [step]: [] }));
+    } else {
+      // Scroll to first error
+      const firstError = document.querySelector('[data-error="true"]');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  };
+
+  const handlePreviousStep = () => {
+    setStep(step - 1);
+    // Clear errors for the step we're leaving
+    setStepErrors(prev => ({ ...prev, [step]: [] }));
+  };
+
   const NumberGroup = ({ title, field }: { title: string; field: keyof OrganizationFormValues['structure'] }) => {
     const value = watchStructure[field];
+    const error = form.formState.errors.structure?.[field];
+    const otherField = `${field}Other` as keyof OrganizationFormValues['structure'];
+    const otherError = form.formState.errors.structure?.[otherField];
 
     return (
       <div className="mt-4">
-        <div className="font-medium text-gray-800 mb-2">{title}</div>
+        <div className="font-medium text-gray-800 mb-2 flex items-center justify-between">
+          <span>{title}</span>
+          {error && (
+            <span className="text-sm text-destructive flex items-center gap-1">
+              <AlertCircle className="h-3 w-3" />
+              {error.message}
+            </span>
+          )}
+        </div>
         <div className="grid grid-cols-3 gap-2">
           {BRACKETS.map((b) => (
             <div key={b}>
               <button
                 type="button"
-                onClick={() => form.setValue(`structure.${field}`, b, { shouldValidate: true })}
+                onClick={() => {
+                  form.setValue(`structure.${field}`, b, { shouldValidate: true });
+                  // Clear other field if not selecting "Other"
+                  if (b !== "Other") {
+                    form.setValue(`structure.${otherField}`, "", { shouldValidate: true });
+                  }
+                }}
                 className={`w-full p-3 rounded-lg border text-center transition-all ${value === b
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50"
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border hover:border-primary/50"
                   }`}
               >
                 {b}
@@ -205,50 +378,78 @@ export function OrganizationForm({
           ))}
         </div>
         {value === "Other" && (
-          <Input
-            type="number"
-            placeholder="Type other number"
-            className="w-full mt-2"
-            {...form.register(`structure.${field}Other`)}
-          />
+          <div className="mt-2" data-error={!!otherError}>
+            <Input
+              type="number"
+              min="0"
+              max={field === 'clients' ? "10000" : "1000"}
+              placeholder={`Enter number of ${title.toLowerCase()}`}
+              className={`w-full ${otherError ? 'border-destructive' : ''}`}
+              {...form.register(`structure.${otherField}`)}
+              onChange={(e) => {
+                const value = e.target.value;
+                form.setValue(`structure.${otherField}`, value, { shouldValidate: true });
+              }}
+            />
+            {otherError && (
+              <p className="text-sm text-destructive mt-1">{otherError.message}</p>
+            )}
+          </div>
         )}
       </div>
     );
   };
 
-const handleSubmitForm = async (data: OrganizationFormValues) => {
-  const submitData: CreateOrganizationData | UpdateOrganizationData = {
-    ...data,
+  const handleSubmitForm = async (data: OrganizationFormValues) => {
+    // Final validation before submission
+    const isValid = await form.trigger();
+    if (!isValid) {
+      // Scroll to first error
+      const firstError = document.querySelector('[data-error="true"]');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
 
-    // ✅ sirf selected option true jayega
-    ...(data.paymentOption === "alreadyPaid" && { alreadyPaid: true }),
-    ...(data.paymentOption === "unpaid" && { unpaid: true }),
+    const submitData: CreateOrganizationData | UpdateOrganizationData = {
+      ...data,
+      ...(data.paymentOption === "alreadyPaid" && { alreadyPaid: true }),
+      ...(data.paymentOption === "unpaid" && { unpaid: true }),
+      paymentOption: undefined,
+      businessNameChoice: data.businessName,
+      practiceNameChoice: data.practiceName,
+      clientsRange: data.clientsRange || data.structure.clients,
+    };
 
-    // ❌ string field bilkul nahi bhejna
-    paymentOption: undefined,
-
-    businessNameChoice: data.businessName,
-    practiceNameChoice: data.practiceName,
-    clientsRange: data.clientsRange || data.structure.clients,
+    await onSubmit(submitData);
   };
 
-  await onSubmit(submitData);
-};
-
-
-
-
-  const canProceedToStep2 = form.watch("email") && form.watch("email").includes("@");
+  const canProceedToStep2 = form.watch("email") && !form.getFieldState("email").error;
   const canProceedToStep3 = form.watch("firstName") && form.watch("lastName") &&
-    (showPasswordField ? form.watch("password") : true);
-  const canProceedToStep4 = form.watch("businessName");
-  const canProceedToStep5 = form.watch("practiceName");
-  const canProceedToStep6 = form.watch("nature").length > 0;
+    (showPasswordField ? form.watch("password") && !form.getFieldState("password").error : true) &&
+    !form.getFieldState("firstName").error && !form.getFieldState("lastName").error;
+  const canProceedToStep4 = form.watch("businessName") && !form.getFieldState("businessName").error;
+  const canProceedToStep5 = form.watch("practiceName") && !form.getFieldState("practiceName").error;
+  const canProceedToStep6 = form.watch("nature").length > 0 && !form.getFieldState("nature").error;
   const canProceedToStep7 = form.watch("structure.partners") &&
     form.watch("structure.admin") &&
     form.watch("structure.accountants") &&
-    form.watch("structure.clients");
-  const canSubmit = form.watch("plan") && form.watch("paymentOption");
+    form.watch("structure.clients") &&
+    !form.getFieldState("structure").error;
+  const canSubmit = form.watch("plan") && form.watch("paymentOption") &&
+    !form.getFieldState("plan").error && !form.getFieldState("paymentOption").error;
+
+  // Validation status for each step
+  const stepValidationStatus = {
+    1: canProceedToStep2,
+    2: canProceedToStep3,
+    3: canProceedToStep4,
+    4: canProceedToStep5,
+    5: canProceedToStep6,
+    6: canProceedToStep7,
+    7: canSubmit,
+  };
 
   const renderStep = () => {
     switch (step) {
@@ -267,7 +468,7 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                 }
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent data-error={!!form.formState.errors.email}>
               <FormField
                 control={form.control}
                 name="email"
@@ -279,12 +480,28 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                         placeholder="you@company.com"
                         className="h-12"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          form.trigger("email");
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {stepErrors[1]?.length > 0 && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <ul className="text-sm text-destructive space-y-1">
+                    {stepErrors[1].map((error, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <AlertCircle className="h-3 w-3" />
+                        {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
@@ -307,7 +524,14 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="John" {...field} />
+                        <Input
+                          placeholder="John"
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger("firstName");
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -320,7 +544,14 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Doe" {...field} />
+                        <Input
+                          placeholder="Doe"
+                          {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger("lastName");
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -328,23 +559,63 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                 />
               </div>
               {showPasswordField && (
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          placeholder="Create a secure password"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div data-error={!!form.formState.errors.password}>
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="password"
+                            placeholder="Create a secure password"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger("password");
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                        {field.value && (
+                          <div className="mt-2 space-y-1">
+                            <div className="text-xs text-muted-foreground">Password must contain:</div>
+                            <ul className="text-xs space-y-1">
+                              <li className={`flex items-center gap-1 ${/[A-Z]/.test(field.value) ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                <Check className="h-3 w-3" /> At least one uppercase letter
+                              </li>
+                              <li className={`flex items-center gap-1 ${/[a-z]/.test(field.value) ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                <Check className="h-3 w-3" /> At least one lowercase letter
+                              </li>
+                              <li className={`flex items-center gap-1 ${/[0-9]/.test(field.value) ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                <Check className="h-3 w-3" /> At least one number
+                              </li>
+                              <li className={`flex items-center gap-1 ${/[^A-Za-z0-9]/.test(field.value) ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                <Check className="h-3 w-3" /> At least one special character
+                              </li>
+                              <li className={`flex items-center gap-1 ${field.value.length >= 8 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                                <Check className="h-3 w-3" /> At least 8 characters
+                              </li>
+                            </ul>
+                          </div>
+                        )}
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              )}
+              {stepErrors[2]?.length > 0 && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <ul className="text-sm text-destructive space-y-1">
+                    {stepErrors[2].map((error, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <AlertCircle className="h-3 w-3" />
+                        {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -365,22 +636,33 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                 }
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4" data-error={!!form.formState.errors.businessName}>
               {suggestions.length > 0 && (
                 <div>
-                  <div className="text-sm font-medium mb-2">Suggested Names</div>
+                  <div className="text-sm font-medium mb-2 text-foreground">
+                    Suggested Names
+                  </div>
+
                   <div className="space-y-2">
-                    {suggestions.map(s => (
-                      <OptionCard
+                    {suggestions.map((s) => (
+                      <div
                         key={s}
-                        label={s}
-                        selected={form.watch("businessName") === s}
-                        onClick={() => form.setValue("businessName", s)}
-                      />
+                        className="text-foreground [&_*]:text-foreground"
+                      >
+                        <OptionCard
+                          label={s}
+                          selected={watchBusinessName === s}
+                          onClick={() => {
+                            form.setValue("businessName", s);
+                            form.trigger("businessName");
+                          }}
+                        />
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
+
 
               <FormField
                 control={form.control}
@@ -391,12 +673,28 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                       <Input
                         placeholder="Enter business name"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          form.trigger("businessName");
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {stepErrors[3]?.length > 0 && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <ul className="text-sm text-destructive space-y-1">
+                    {stepErrors[3].map((error, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <AlertCircle className="h-3 w-3" />
+                        {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
@@ -413,7 +711,7 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                 {isEditMode && `Current: ${initialData?.practiceName || "Not set"}`}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent data-error={!!form.formState.errors.practiceName}>
               <FormField
                 control={form.control}
                 name="practiceName"
@@ -423,12 +721,28 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                       <Input
                         placeholder="Enter practice name"
                         {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          form.trigger("practiceName");
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              {stepErrors[4]?.length > 0 && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <ul className="text-sm text-destructive space-y-1">
+                    {stepErrors[4].map((error, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <AlertCircle className="h-3 w-3" />
+                        {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
@@ -441,9 +755,9 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                 <Building2 className="h-5 w-5" />
                 What is the nature of your business?
               </CardTitle>
-              <CardDescription>Select one or more.</CardDescription>
+              <CardDescription>Select one or more (up to 5).</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent data-error={!!form.formState.errors.nature}>
               <div className="grid grid-cols-2 gap-3">
                 {NATURE_OPTIONS.map((o) => (
                   <button
@@ -451,24 +765,36 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                     type="button"
                     onClick={() => {
                       if (!o.comingSoon) {
-                        const currentNature = form.watch("nature");
+                        const currentNature = watchNature;
+                        let newNature;
                         if (currentNature.includes(o.id)) {
-                          form.setValue(
-                            "nature",
-                            currentNature.filter(x => x !== o.id)
-                          );
+                          newNature = currentNature.filter(x => x !== o.id);
                         } else {
-                          form.setValue("nature", [...currentNature, o.id]);
+                          if (currentNature.length >= 5) {
+                            // Show error if trying to select more than 5
+                            form.setError("nature", {
+                              type: "max",
+                              message: "You can select up to 5 business natures"
+                            });
+                            return;
+                          }
+                          newNature = [...currentNature, o.id];
                         }
+                        form.setValue("nature", newNature, { shouldValidate: true });
                       }
                     }}
                     disabled={o.comingSoon}
-                    className={`p-4 rounded-lg border text-left relative transition-all ${form.watch("nature").includes(o.id)
-                        ? 'border-primary bg-primary/10 shadow-sm'
-                        : 'border-border hover:border-primary/50'
+                    className={`p-4 rounded-lg border text-left relative transition-all ${watchNature.includes(o.id)
+                      ? 'border-primary bg-primary/10 shadow-sm'
+                      : 'border-border hover:border-primary/50'
                       } ${o.comingSoon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   >
                     <div className="font-medium text-sm">{o.label}</div>
+                    {watchNature.includes(o.id) && (
+                      <div className="absolute top-2 right-2">
+                        <Check className="h-4 w-4 text-primary" />
+                      </div>
+                    )}
                     {o.comingSoon && (
                       <Badge variant="outline" className="mt-1 text-xs">
                         Coming soon
@@ -486,6 +812,21 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                   </FormItem>
                 )}
               />
+              <div className="mt-2 text-sm text-muted-foreground">
+                Selected: {watchNature.length} of 5
+              </div>
+              {stepErrors[5]?.length > 0 && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <ul className="text-sm text-destructive space-y-1">
+                    {stepErrors[5].map((error, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <AlertCircle className="h-3 w-3" />
+                        {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
@@ -502,11 +843,24 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                 Tell us about partners, admin staff and accountants.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6" data-error={!!form.formState.errors.structure}>
               <NumberGroup title="Partners" field="partners" />
               <NumberGroup title="Admin Staff" field="admin" />
               <NumberGroup title="Accountants" field="accountants" />
               <NumberGroup title="How many clients do you manage?" field="clients" />
+
+              {stepErrors[6]?.length > 0 && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <ul className="text-sm text-destructive space-y-1">
+                    {stepErrors[6].map((error, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <AlertCircle className="h-3 w-3" />
+                        {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
@@ -535,10 +889,13 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                     <Card
                       key={p._id}
                       className={`cursor-pointer transition-all hover:shadow-lg ${form.watch("plan") === p._id
-                          ? 'border-primary ring-2 ring-primary/20'
-                          : 'border-border'
+                        ? 'border-primary ring-2 ring-primary/20'
+                        : 'border-border'
                         }`}
-                      onClick={() => form.setValue("plan", p._id)}
+                      onClick={() => {
+                        form.setValue("plan", p._id);
+                        form.trigger("plan");
+                      }}
                     >
                       <CardHeader>
                         <CardTitle className="text-lg">{p.name}</CardTitle>
@@ -578,6 +935,16 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                 </div>
               )}
 
+              <FormField
+                control={form.control}
+                name="plan"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               {form.watch("plan") && (
                 <>
                   <Separator />
@@ -587,11 +954,14 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                       control={form.control}
                       name="paymentOption"
                       render={({ field }) => (
-                        <FormItem>
+                        <FormItem data-error={!!form.formState.errors.paymentOption}>
                           <FormControl>
                             <RadioGroup
                               value={field.value}
-                              onValueChange={field.onChange}
+                              onValueChange={(value) => {
+                                field.onChange(value);
+                                form.trigger("paymentOption");
+                              }}
                               className="space-y-3"
                             >
                               <div className="flex items-center space-x-3 rounded-lg border p-4">
@@ -622,6 +992,19 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
                   </div>
                 </>
               )}
+
+              {stepErrors[7]?.length > 0 && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <ul className="text-sm text-destructive space-y-1">
+                    {stepErrors[7].map((error, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <AlertCircle className="h-3 w-3" />
+                        {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
         );
@@ -634,15 +1017,18 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmitForm)} className="space-y-6">
-        {/* Progress Indicator */}
+        {/* Progress Indicator with validation status */}
         <div className="flex items-center justify-between mb-6">
           {[1, 2, 3, 4, 5, 6, 7].map((s) => (
             <div key={s} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step === s ? 'bg-primary text-primary-foreground' :
-                  step > s ? 'bg-green-500 text-white' :
-                    'bg-muted text-muted-foreground'
+              <div className={`relative w-8 h-8 rounded-full flex items-center justify-center ${step === s ? 'bg-primary text-primary-foreground' :
+                step > s ? 'bg-green-500 text-white' :
+                  'bg-muted text-muted-foreground'
                 }`}>
                 {step > s ? <Check className="h-4 w-4" /> : s}
+                {s < step && stepValidationStatus[s] === false && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full border-2 border-white"></span>
+                )}
               </div>
               {s < 7 && (
                 <div className={`w-12 h-1 mx-2 ${step > s ? 'bg-green-500' : 'bg-muted'}`} />
@@ -655,7 +1041,7 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
 
         <div className="flex justify-between pt-4">
           {step > 1 ? (
-            <Button variant="outline" type="button" onClick={() => setStep(step - 1)}>
+            <Button variant="outline" type="button" onClick={handlePreviousStep}>
               <ChevronLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
@@ -670,31 +1056,40 @@ const handleSubmitForm = async (data: OrganizationFormValues) => {
           {step < 7 ? (
             <Button
               type="button"
-              onClick={() => {
-                const validations = [
-                  () => canProceedToStep2,
-                  () => canProceedToStep3,
-                  () => canProceedToStep4,
-                  () => canProceedToStep5,
-                  () => canProceedToStep6,
-                  () => canProceedToStep7,
-                ][step - 1];
-
-                if (validations()) {
-                  setStep(step + 1);
-                }
-              }}
+              onClick={handleNextStep}
+              disabled={!stepValidationStatus[step]}
             >
               Continue
               <ChevronRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button type="submit" disabled={!canSubmit || loading}>
+            <Button
+              type="submit"
+              disabled={!canSubmit || loading || !stepValidationStatus[7]}
+            >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isEditMode ? "Update Organization" : "Create Organization"}
             </Button>
           )}
         </div>
+
+        {/* Overall form validation summary */}
+        {Object.keys(form.formState.errors).length > 0 && step === 7 && (
+          <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <div className="flex items-center gap-2 text-destructive font-medium mb-2">
+              <AlertCircle className="h-4 w-4" />
+              Please fix the following errors before submitting:
+            </div>
+            <ul className="text-sm text-destructive space-y-1">
+              {Object.entries(form.formState.errors).map(([field, error]) => (
+                <li key={field} className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-destructive rounded-full"></span>
+                  {error.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </form>
     </Form>
   );

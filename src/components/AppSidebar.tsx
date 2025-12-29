@@ -68,7 +68,7 @@ const getNavCls = (active: boolean, collapsed: boolean) =>
 export function AppSidebar() {
   const { user } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
-
+  console.log("User in Sidebar:", user);
   const { open, toggleSidebar } = useSidebar();
   const collapsed = !open;
   const { pathname } = useLocation();
@@ -228,11 +228,11 @@ const { theme } = useTheme();
               className="flex-1 flex flex-col ml-3 leading-tight overflow-hidden"
             >
               <span className="font-medium text-[13px] truncate">
-                {user ? `${user.firstName} ${user.lastName}` : "User"}
+                {user ? `${user.firstName} ${user.lastName}` : ""}
               </span>
 
               <span className="text-xs text-sidebar-foreground/60 truncate">
-                {user?.role || "Web Designer"}
+                {user?.role || ""}
               </span>
             </motion.div>
           )}

@@ -15,7 +15,6 @@ const EmailTriggerAddDialog = ({ open, onClose, onSuccess }) => {
     triggerName: "",
     event: "",
     timing: "",
-    message: "",
     status: "active",
   });
 

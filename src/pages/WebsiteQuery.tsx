@@ -414,13 +414,23 @@ const WebsiteQuery = () => {
                               className="h-6 px-2 text-xs mt-1"
                               onClick={() => {
                                 toast({
-                                  title: "Full Message",
-                                  description: q.message,
+                                  title: (
+                                    <div className="text-center font-semibold">
+                                      Full Message
+                                    </div>
+                                  ),
+                                  description: (
+                                    <div className="max-h-[300px] overflow-y-auto pr-2 text-sm leading-relaxed text-left whitespace-pre-wrap">
+                                      {q.message}
+                                    </div>
+                                  ),
                                 });
                               }}
                             >
                               View full
                             </Button>
+
+
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="max-w-xs">{q.message}</p>

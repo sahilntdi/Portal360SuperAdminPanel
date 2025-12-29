@@ -9,12 +9,12 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Pencil, 
-  Trash2, 
-  Shield, 
-  Activity, 
-  Settings, 
+import {
+  Pencil,
+  Trash2,
+  Shield,
+  Activity,
+  Settings,
   Mail,
   Lock,
   Eye,
@@ -57,8 +57,8 @@ export function SuperadminTable({ items, onEdit, onDelete }) {
   const getControlType = (item) => {
     const title = item.title?.toLowerCase() || '';
     const desc = item.description?.toLowerCase() || '';
-    
-    if (title.includes('email') || title.includes('mail') || desc.includes('email') || desc.includes('mail')) 
+
+    if (title.includes('email') || title.includes('mail') || desc.includes('email') || desc.includes('mail'))
       return { type: 'Email', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200', icon: 'mail' };
     if (title.includes('security') || title.includes('access') || title.includes('lock') || desc.includes('security'))
       return { type: 'Security', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200', icon: 'shield' };
@@ -70,7 +70,7 @@ export function SuperadminTable({ items, onEdit, onDelete }) {
       return { type: 'Database', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200', icon: 'database' };
     if (title.includes('user') || title.includes('role') || title.includes('permission') || desc.includes('user'))
       return { type: 'User Management', color: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200', icon: 'users' };
-    
+
     return { type: 'General', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200', icon: 'settings' };
   };
 
@@ -85,7 +85,7 @@ export function SuperadminTable({ items, onEdit, onDelete }) {
       'users': 'text-cyan-600 bg-cyan-100 dark:text-cyan-400 dark:bg-cyan-900/30',
       'default': 'text-primary bg-primary/10'
     };
-    
+
     const key = iconName?.toLowerCase() || type?.icon || 'default';
     return colors[key] || colors.default;
   };
@@ -106,7 +106,7 @@ export function SuperadminTable({ items, onEdit, onDelete }) {
             const IconComponent = getIconComponent(item.icon);
             const controlType = getControlType(item);
             const iconColor = getIconColor(item.icon, controlType);
-            
+
             return (
               <TableRow key={item._id || item.id} className="group hover:bg-muted/20 transition-all duration-200">
                 <TableCell>
@@ -119,7 +119,7 @@ export function SuperadminTable({ items, onEdit, onDelete }) {
                     </div>
                   </div>
                 </TableCell>
-                
+
                 <TableCell>
                   <div className="space-y-2">
                     <div className="text-sm text-muted-foreground leading-relaxed">
@@ -132,13 +132,16 @@ export function SuperadminTable({ items, onEdit, onDelete }) {
                     </div>
                   </div>
                 </TableCell>
-                
-                <TableCell>
-                  <Badge className={`${controlType.color} border-0 font-medium flex items-center gap-1.5`}>
+
+                <TableCell className="text-center">
+                  <Badge
+                    className={`${controlType.color} border-0 font-medium flex items-center justify-center gap-1.5`}
+                  >
                     {controlType.type}
                   </Badge>
                 </TableCell>
-                
+
+
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Button
@@ -150,7 +153,7 @@ export function SuperadminTable({ items, onEdit, onDelete }) {
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -167,7 +170,7 @@ export function SuperadminTable({ items, onEdit, onDelete }) {
           })}
         </TableBody>
       </Table>
-      
+
       {items?.length === 0 && (
         <div className="text-center py-12">
           <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">

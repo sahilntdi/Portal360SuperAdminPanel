@@ -38,7 +38,6 @@ interface PricingTableProps {
 function PricingTableComponent({ onEdit, onDelete, onView, loading = false, data = [] }: PricingTableProps) {
 
 
-    console.log("PricingTable data:", data);
     const formatDate = (dateString: string) => {
         try {
             return format(new Date(dateString), 'MMM dd, yyyy');
@@ -104,7 +103,7 @@ function PricingTableComponent({ onEdit, onDelete, onView, loading = false, data
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {data.map((item) => (
+                            {[...data].reverse().map((item) => (
                                 <TableRow key={item._id}>
                                     <TableCell>
                                         <div className="space-y-1.5">
@@ -232,7 +231,7 @@ function PricingTableComponent({ onEdit, onDelete, onView, loading = false, data
 
             {/* Mobile Cards */}
             <div className="lg:hidden space-y-4">
-                {data.map((item) => (
+                {[...data].reverse().map((item) => (
                     <Card key={item._id} className="overflow-hidden">
                         <div className="p-4 space-y-4">
                             {/* Header */}

@@ -27,8 +27,8 @@ const instance = axios.create({
 instance.interceptors.request.use((config) => {
   const token = getCookie("authToken");
 
-  console.log("🍪 Cookie Read:", document.cookie);
-  console.log("🔑 Token:", token);
+  // console.log("🍪 Cookie Read:", document.cookie);
+  // console.log("🔑 Token:", token);
 
   // device-id
   const deviceId =

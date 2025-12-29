@@ -24,14 +24,14 @@ export function UserAddDialog({ open, onClose, onCreate, organizations, orgLoadi
     email: "",
     password: "",
     role: "",
-    organization: "",
+    tenantId: "",
   });
 
-// UserAddDialog.tsx में onCreate call करने का तरीका:
+
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   
-  if (!form.organization) {
+  if (!form.tenantId) {
     toast({
       title: "Error",
       description: "Please select an organization",
@@ -48,7 +48,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       email: form.email,
       password: form.password,
       role: form.role,
-      organization: [form.organization],
+      tenantId: [form.tenantId],
     });
     
     setForm({
@@ -57,7 +57,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       email: "",
       password: "",
       role: "",
-      organization: "",
+      tenantId: "",
     });
     onClose();
   } catch (error: any) {
@@ -136,8 +136,8 @@ const handleSubmit = async (e: React.FormEvent) => {
               </div>
             ) : (
               <Select
-                value={form.organization}
-                onValueChange={(value) => setForm({ ...form, organization: value })}
+                value={form.tenantId}
+                onValueChange={(value) => setForm({ ...form, tenantId: value })}
                 required
               >
                 <SelectTrigger>

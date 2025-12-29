@@ -264,17 +264,7 @@ const OrganizationDetailView = () => {
                 <Mail className="h-4 w-4 mr-2" />
                 Send Email
               </DropdownMenuItem>
-            
-             
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-amber-600">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Organization
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-600">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Organization
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -397,10 +387,7 @@ const OrganizationDetailView = () => {
                         </Button>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                      <Mail className="h-4 w-4 mr-2" />
-                      Contact
-                    </Button>
+                    
                   </div>
                 </CardContent>
               </Card>

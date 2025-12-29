@@ -17,7 +17,7 @@ import { X, Tag, DollarSign, Star, Hash, Search, Plus } from "lucide-react";
 import FeatureAddDialog from "../features/FeatureAddDialog";
 import { getFeatures } from "@/ApiService/feature.service";
 
-export default function PricingForm({ defaultValue = {}, onSubmit, onCancel }) {
+export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loading = false }) {
   const [form, setForm] = useState({
     name: "",
     price: "",
@@ -97,6 +97,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel }) {
   };
 
   const handleSubmit = () => {
+    if (loading) return;
     const validFeatures = form.features.map((f) => ({
       featureId: f.featureId,
       name: f.name,
@@ -210,7 +211,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel }) {
           </div>
 
           {/* Available Feature Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border p-2 rounded-md max-h-40 overflow-y-auto">
+          {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border p-2 rounded-md max-h-40 overflow-y-auto">
             {filteredFeatures.map((f) => (
               <Button
                 key={f._id}
@@ -222,7 +223,28 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel }) {
                 {f.name}
               </Button>
             ))}
+          </div> */}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 border p-2 rounded-md max-h-40 overflow-y-auto">
+            {filteredFeatures.length > 0 ? (
+              filteredFeatures.map((f) => (
+                <Button
+                  key={f._id}
+                  size="sm"
+                  variant="outline"
+                  disabled={form.features.some((x) => x.featureId === f._id)}
+                  onClick={() => handleAddFeature(f)}
+                >
+                  {f.name}
+                </Button>
+              ))
+            ) : (
+              <div className="col-span-full text-center text-sm text-muted-foreground py-4">
+                No feature available
+              </div>
+            )}
           </div>
+
 
           {/* Selected Features */}
           {form.features.map((f, i) => (
@@ -246,7 +268,10 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel }) {
       {/* Bottom Buttons */}
       <div className="flex justify-end gap-3 pt-4">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button onClick={handleSubmit}>Save Plan</Button>
+        <Button onClick={handleSubmit} disabled={loading}>
+          {loading ? "Saving..." : "Save Plan"}
+        </Button>
+
       </div>
 
       {/* ADD FEATURE DIALOG */}

@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import PricingForm from "./PricingForm";
 import { updatePricing } from "@/ApiService/PricingServices";
 import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
 
 interface PricingEditDialogProps {
   open: boolean;
@@ -10,24 +11,28 @@ interface PricingEditDialogProps {
   onSuccess?: () => void;
 }
 
-export default function PricingEditDialog({ open, item, onClose, onSuccess }: PricingEditDialogProps) {
+export default function PricingEditDialog({ open, item, onClose, onSuccess }) {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false); // ✅ add
 
-  const handleSubmit = async (data: any) => {
+  const handleSubmit = async (data) => {
     try {
+      setLoading(true);
       await updatePricing(item._id, data);
       toast({
         title: "Success",
         description: "Pricing plan updated successfully",
       });
       onClose();
-      if (onSuccess) onSuccess();
-    } catch (error) {
+      onSuccess?.();
+    } catch {
       toast({
         title: "Error",
         description: "Failed to update pricing plan",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,10 +44,12 @@ export default function PricingEditDialog({ open, item, onClose, onSuccess }: Pr
         <DialogHeader>
           <DialogTitle>Edit Pricing Plan: {item.name}</DialogTitle>
         </DialogHeader>
+
         <PricingForm
           defaultValue={item}
           onSubmit={handleSubmit}
           onCancel={onClose}
+          loading={loading}   
         />
       </DialogContent>
     </Dialog>
