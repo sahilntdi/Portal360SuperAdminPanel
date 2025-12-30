@@ -267,7 +267,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
               <Input
                 value={form.recommendedFor}
                 onChange={(e) => updateField("recommendedFor", e.target.value)}
-                placeholder="e.g., Small businesses, Startups"
+                placeholder="No of users, team size, business type, etc."
               />
             </div>
           </CardContent>

@@ -52,7 +52,7 @@ const menuItems = [
   { title: "Email Triggers", url: "/email-triggers", icon: Mail },
   // { title: "AI & Automation", url: "/ai-automation", icon: Bot },
   // { title: "Compliance", url: "/compliance", icon: FileCheck },
-  { title: "website Querys", url: "/website-queries", icon: Mail },
+  { title: "Website Queries", url: "/website-queries", icon: Mail },
 ];
 
 // ACTIVE + COLLAPSED ALIGNMENT FIX
@@ -68,7 +68,7 @@ const getNavCls = (active: boolean, collapsed: boolean) =>
 export function AppSidebar() {
   const { user } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
-  console.log("User in Sidebar:", user);
+  // console.log("User in Sidebar:", user);
   const { open, toggleSidebar } = useSidebar();
   const collapsed = !open;
   const { pathname } = useLocation();

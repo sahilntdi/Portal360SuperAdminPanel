@@ -13,10 +13,19 @@ export function FeatureDeleteDialog({ open, onClose, featureId, onSuccess }) {
       onSuccess();
       onClose();
     } catch (err) {
-      toast({ variant: "destructive", title: "Error", description: err?.message });
+      const errorMessage =
+        err?.response?.data?.message || "Something went wrong";
+
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: errorMessage,
+      });
+
       console.log("Error deleting feature:", err);
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
