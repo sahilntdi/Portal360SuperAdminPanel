@@ -118,9 +118,9 @@ const Organizations = () => {
             </div>
           ) : (
             <>
-              <h1 className="text-3xl font-bold">Organizations</h1>
+              <h1 className="text-3xl font-bold">Organisations</h1>
               <p className="text-muted-foreground mt-1">
-                Manage all tenant organizations ({total} total)
+                Manage all tenant organisations ({total} total)
               </p>
             </>
           )}
@@ -138,7 +138,7 @@ const Organizations = () => {
             {loading && organizations.length === 0 ? (
               <Skeleton className="h-6 w-48" />
             ) : (
-              <CardTitle>All Organizations</CardTitle>
+              <CardTitle>All Organisations</CardTitle>
             )}
 
             {loading && organizations.length === 0 ? (
@@ -176,7 +176,7 @@ const Organizations = () => {
           ) : (
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-muted-foreground">
-                Showing {filteredOrgs.length} of {total} organizations
+                Showing {filteredOrgs.length} of {total} organisations
               </p>
               <Button
                 variant="outline"

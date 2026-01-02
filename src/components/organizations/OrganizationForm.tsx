@@ -169,7 +169,7 @@ const organizationSchema = z.object({
   if (data.paymentOption === "alreadyPaid" && data.plan === "") {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "You must select a plan if you have already paid",
+      message: "You must select a plan if you have pay by invoice",
       path: ["plan"]
     });
   }
@@ -182,7 +182,7 @@ type OrganizationFormValues = z.infer<typeof organizationSchema>;
 
 const NATURE_OPTIONS = [
   { id: "accounting", label: "Accounting", comingSoon: false },
-  { id: "tax", label: "Tax", comingSoon: false },
+  { id: "tax", label: "Tax", comingSoon: true },
   { id: "marketing", label: "Marketing", comingSoon: true },
   { id: "consulting", label: "Consulting", comingSoon: true },
   { id: "legal", label: "Legal", comingSoon: true },
@@ -400,7 +400,8 @@ export function OrganizationForm({
     );
   };
 
-  const handleSubmitForm = async (data: OrganizationFormValues) => {
+  const handleSubmitForm = async (e: React.FormEvent, data: OrganizationFormValues) => {
+      e.preventDefault(); 
     // Final validation before submission
     const isValid = await form.trigger();
     if (!isValid) {
@@ -977,7 +978,7 @@ export function OrganizationForm({
                               <div className="flex items-center space-x-3 rounded-lg border p-4">
                                 <RadioGroupItem value="alreadyPaid" id="alreadyPaid" />
                                 <Label htmlFor="alreadyPaid" className="flex-1 cursor-pointer">
-                                  <div className="font-medium text-green-600">Already Paid</div>
+                                  <div className="font-medium text-green-600">Pay by Invoice</div>
                                   <div className="text-sm text-muted-foreground">
                                     Instant activation without payment
                                   </div>

@@ -55,7 +55,7 @@ export function OrganizationDeleteDialog({
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-red-500" />
-            Delete Organization
+            Delete Organisation
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-3">
             <div className="flex items-center gap-3 p-3 bg-red-50 dark:bg-red-950/30 rounded-lg">
@@ -122,7 +122,7 @@ export function OrganizationDeleteDialog({
             ) : (
               <>
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete Organization
+                Delete Organisation
               </>
             )}
           </AlertDialogAction>

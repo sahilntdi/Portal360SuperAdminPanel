@@ -43,12 +43,12 @@ export function OrganizationDialog({
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? "Edit Organization" : "Create New Organization"}
+            {isEditMode ? "Edit Organisation" : "Create New Organisation"}
           </DialogTitle>
           <DialogDescription>
             {isEditMode 
-              ? "Update organization details and settings"
-              : "Add a new organization to the platform"
+              ? "Update Organisation details and settings"
+              : "Add a new Organisation to the platform"
             }
           </DialogDescription>
         </DialogHeader>

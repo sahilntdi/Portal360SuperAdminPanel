@@ -26,15 +26,13 @@ export function OrganizationEditDialog({
     if (!organization) return;
 
     try {
-      console.log("EDIT ORGANIZATION ID 👉", organization._id);
-      console.log("EDIT ORGANIZATION PAYLOAD 👉", data);
       setLoading(true);
       await updateOrganization(organization._id, data);
-      toast.success("Organization updated successfully!");
+      toast.success("Organisation updated successfully!");
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
-      toast.error(error.message || "Failed to update organization");
+      toast.error(error.message || "Failed to update organisation");
     } finally {
       setLoading(false);
     }

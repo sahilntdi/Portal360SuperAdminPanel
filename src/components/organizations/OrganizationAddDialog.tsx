@@ -42,7 +42,7 @@ export function OrganizationAddDialog({ onSuccess }: OrganizationAddDialogProps)
     >
       <Button>
         <PlusCircle className="mr-2 h-4 w-4" />
-        Add Organization
+        Add Organisation
       </Button>
     </OrganizationDialog>
   );

@@ -25,13 +25,13 @@ interface OrganizationTableProps {
   onStatusToggle: (id: string, status: string) => Promise<void>;
 }
 
-export function OrganizationTable({ 
-  organizations, 
-  loading = false, 
-  onView, 
-  onEdit, 
+export function OrganizationTable({
+  organizations,
+  loading = false,
+  onView,
+  onEdit,
   onDelete,
-  onStatusToggle 
+  onStatusToggle
 }: OrganizationTableProps) {
   const getInitials = (name: string) => {
     return name
@@ -172,7 +172,7 @@ export function OrganizationTable({
                   </div>
                 </div>
               </TableCell>
-              
+
               <TableCell>
                 <div>
                   <div className="font-medium text-sm">
@@ -183,21 +183,21 @@ export function OrganizationTable({
                   </div>
                 </div>
               </TableCell>
-              
+
               <TableCell>
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span>{org.metrics?.totalUsers || 1}</span>
                 </div>
               </TableCell>
-              
+
               <TableCell>
                 <Badge className={getPlanColor(org.planName)}>
                   <CreditCard className="h-3 w-3 mr-1" />
                   {org.planName?.toUpperCase() || 'STARTER'}
                 </Badge>
               </TableCell>
-              
+
               <TableCell>
                 <div className="flex items-center gap-2">
                   <OrganizationStatusToggle
@@ -205,20 +205,23 @@ export function OrganizationTable({
                     onToggle={onStatusToggle}
                   />
                   <Badge
-                    variant={
-                      org.status === "active" ? "default" :
-                      org.status === "pending" ? "secondary" : "destructive"
+                    className={
+                      org.status === "active"
+                        ? "bg-green-500 text-white hover:bg-green-600"
+                        : org.status === "pending"
+                          ? "bg-secondary text-secondary-foreground"
+                          : "bg-destructive text-destructive-foreground"
                     }
                   >
                     {org.status}
                   </Badge>
                 </div>
               </TableCell>
-              
+
               <TableCell className="text-sm text-muted-foreground">
                 {format(new Date(org.lastActive), "dd MMM yyyy")}
               </TableCell>
-              
+
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

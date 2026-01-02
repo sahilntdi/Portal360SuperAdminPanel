@@ -54,7 +54,19 @@ const OrganizationDetailView = () => {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
+
+
+  const location = window.location;
+  const queryParams = new URLSearchParams(location.search);
+  const initialTab = queryParams.get("tab") || "overview";
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", activeTab);
+    window.history.replaceState(null, "", url.toString());
+  }, [activeTab]);
+
 
   useEffect(() => {
     fetchOrganizationDetail();
@@ -182,15 +194,28 @@ const OrganizationDetailView = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
         <Building2 className="h-16 w-16 text-muted-foreground mb-4" />
-        <h2 className="text-2xl font-bold mb-2">Organization Not Found</h2>
-        <p className="text-muted-foreground mb-6">The organization you're looking for doesn't exist.</p>
+        <h2 className="text-2xl font-bold mb-2">Organisation Not Found</h2>
+        <p className="text-muted-foreground mb-6">The organisation you're looking for doesn't exist.</p>
         <Button onClick={() => navigate("/organizations")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Organizations
+          Back to Organisations
         </Button>
       </div>
     );
   }
+
+  const withZeroFallback = (value: any) => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === "" ||
+      value === "skip"
+    ) {
+      return "00";
+    }
+    return value;
+  };
+
 
   return (
     <div className="p-6 space-y-6">
@@ -387,7 +412,7 @@ const OrganizationDetailView = () => {
                         </Button>
                       </div>
                     </div>
-                    
+
                   </div>
                 </CardContent>
               </Card>
@@ -612,15 +637,17 @@ const OrganizationDetailView = () => {
                       <label className="text-sm font-medium text-muted-foreground mb-2 block">
                         Connected Email
                       </label>
+
                       <div className="p-3 bg-muted/50 rounded-lg flex items-center justify-between">
                         <span className="font-medium">
-                          {organization.onboardingData.connectedEmail || "Not connected"}
+                          {organization.onboardingData.connectedEmail &&
+                            organization.onboardingData.connectedEmail !== "skip"
+                            ? organization.onboardingData.connectedEmail
+                            : "Not connected"}
                         </span>
-                        {organization.onboardingData.connectedEmail && (
-                          <Badge variant="outline">Connected</Badge>
-                        )}
                       </div>
                     </div>
+
 
                     {organization.onboardingData.completedAt && (
                       <div>
@@ -629,7 +656,9 @@ const OrganizationDetailView = () => {
                         </label>
                         <div className="p-3 bg-muted/50 rounded-lg">
                           <span className="font-medium">
-                            {formatDate(organization.onboardingData.completedAt)}
+                            {organization.onboardingData.completedAt
+                              ? formatDate(organization.onboardingData.completedAt)
+                              : "00"}
                           </span>
                         </div>
                       </div>
@@ -637,40 +666,40 @@ const OrganizationDetailView = () => {
                   </div>
 
                   <div className="space-y-4">
-                    {organization.onboardingData.nature && organization.onboardingData.nature.length > 0 && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                          Nature of Business
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          {organization.onboardingData.nature.map((nat, idx) => (
-                            <Badge key={idx} variant="secondary">
-                              {nat}
-                            </Badge>
-                          ))}
-                        </div>
+                    {organization.onboardingData.nature &&
+                      organization.onboardingData.nature.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {organization.onboardingData.nature.map((nat, idx) => (
+                          <Badge key={idx} variant="secondary">
+                            {nat}
+                          </Badge>
+                        ))}
                       </div>
+                    ) : (
+                      <span className="font-medium">00</span>
                     )}
 
-                    {organization.onboardingData.structure && (
-                      <div>
-                        <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                          Team Structure
-                        </label>
-                        <div className="grid grid-cols-2 gap-3">
-                          {Object.entries(organization.onboardingData.structure).map(([key, value]) => (
+
+                    {organization.onboardingData.structure &&
+                      Object.keys(organization.onboardingData.structure).length > 0 ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        {Object.entries(organization.onboardingData.structure).map(
+                          ([key, value]) => (
                             <div key={key} className="space-y-1">
                               <label className="text-xs text-muted-foreground capitalize">
-                                {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                                {key.replace(/([A-Z])/g, " $1").toLowerCase()}
                               </label>
                               <div className="p-2 bg-muted/50 rounded text-sm font-medium">
-                                {String(value)}
+                                {withZeroFallback(value)}
                               </div>
                             </div>
-                          ))}
-                        </div>
+                          )
+                        )}
                       </div>
+                    ) : (
+                      <span className="font-medium">00</span>
                     )}
+
                   </div>
                 </div>
               </CardContent>
@@ -774,7 +803,7 @@ const OrganizationDetailView = () => {
           <Card>
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Organization events and actions</CardDescription>
+              <CardDescription>Organisation events and actions</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">

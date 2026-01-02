@@ -41,7 +41,7 @@ import { logout } from "@/store/slices/authSlice";
 // MENU ITEMS
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, end: true },
-  { title: "Organizations", url: "/organizations", icon: Building2 },
+  { title: "Organisation", url: "/organizations", icon: Building2 },
   { title: "Users", url: "/users", icon: Users },
   { title: "Subscriptions", url: "/subscriptions", icon: CreditCard },
   { title: "Pricing", url: "/pricing", icon: DollarSign },

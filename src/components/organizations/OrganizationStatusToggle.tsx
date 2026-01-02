@@ -10,9 +10,9 @@ interface OrganizationStatusToggleProps {
   onToggle: (id: string, status: string) => Promise<void>;
 }
 
-export function OrganizationStatusToggle({ 
-  organization, 
-  onToggle 
+export function OrganizationStatusToggle({
+  organization,
+  onToggle
 }: OrganizationStatusToggleProps) {
   const [loading, setLoading] = useState(false);
 
@@ -38,6 +38,11 @@ export function OrganizationStatusToggle({
           checked={organization.status === "active"}
           onCheckedChange={handleToggle}
           disabled={loading}
+          className={`
+            data-[state=checked]:bg-green-500
+            data-[state=checked]:hover:bg-green-600
+            data-[state=checked]:focus:ring-green-500
+          `}
         />
       )}
     </div>

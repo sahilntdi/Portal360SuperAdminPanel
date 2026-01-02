@@ -15,6 +15,7 @@ import {
 import { Alert, AlertDescription } from "../../components/ui/alert";
 import { Loader2, Mail, Lock, Eye, EyeOff, Shield } from "lucide-react";
 import { toast } from "sonner";
+
 const Login: React.FC = () => {
   const dispatch = useAppDispatch();
   const { isLoading, error } = useAppSelector((state) => state.auth);
@@ -36,7 +37,7 @@ const Login: React.FC = () => {
 
   useEffect(() => {
     dispatch(clearError());
-  }, [email, password]);
+  }, [email, password, dispatch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,10 +68,10 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <div className="absolute inset-0 bg-grid-gray-100/[0.02] bg-grid-pattern" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted/40 p-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-grid-gray-100/[0.02] bg-grid-pattern dark:bg-grid-white/[0.02]" />
 
-      <Card className="w-full max-w-md shadow-2xl border-gray-200 backdrop-blur-sm bg-white/95">
+      <Card className="w-full max-w-md shadow-2xl border-border backdrop-blur-sm bg-card/95 relative z-10">
         <CardHeader className="space-y-4 pb-6">
           <div className="flex flex-col items-center justify-center space-y-3">
 
@@ -85,10 +86,10 @@ const Login: React.FC = () => {
 
             {/* Title + Subtitle */}
             <div className="text-center space-y-1">
-              <CardTitle className="text-2xl font-bold text-gray-800">
+              <CardTitle className="text-2xl font-bold text-foreground">
                 Portal360
               </CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardDescription className="text-muted-foreground">
                 Secure access to your dashboard
               </CardDescription>
             </div>
@@ -96,16 +97,18 @@ const Login: React.FC = () => {
           </div>
         </CardHeader>
 
-
         <CardContent className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Field */}
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
+              <Label
+                htmlFor="email"
+                className="text-sm font-semibold text-foreground"
+              >
                 Email Address
               </Label>
               <div className="relative">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
                   <Mail className="h-4 w-4" />
                 </div>
                 <Input
@@ -115,7 +118,7 @@ const Login: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
-                  className="pl-10 h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500/20 bg-white"
+                  className="pl-10 h-11 border-border bg-background focus:border-primary focus:ring-primary/20"
                   required
                 />
               </div>
@@ -123,13 +126,15 @@ const Login: React.FC = () => {
 
             {/* Password Field */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-semibold text-gray-700">
-                  Password
-                </Label>
-              </div>
+              <Label
+                htmlFor="password"
+                className="text-sm font-semibold text-foreground"
+              >
+                Password
+              </Label>
+
               <div className="relative">
-                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
                   <Lock className="h-4 w-4" />
                 </div>
                 <Input
@@ -139,14 +144,14 @@ const Login: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
-                  className="pl-10 pr-10 h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500/20 bg-white"
+                  className="pl-10 pr-10 h-11 border-border bg-background focus:border-primary focus:ring-primary/20"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isLoading}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 disabled:opacity-50"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground disabled:opacity-50"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -159,8 +164,8 @@ const Login: React.FC = () => {
 
             {/* Error Alert */}
             {error && (
-              <Alert variant="destructive" className="border-red-200 bg-red-50">
-                <AlertDescription className="text-red-700">
+              <Alert variant="destructive" className="border-destructive/30 bg-destructive/10">
+                <AlertDescription className="text-destructive">
                   {error}
                 </AlertDescription>
               </Alert>
@@ -170,7 +175,7 @@ const Login: React.FC = () => {
             <Button
               type="submit"
               disabled={isLoading}
-              className="w-full h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+              className="w-full h-11 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-primary-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
               {isLoading ? (
                 <>
@@ -189,19 +194,21 @@ const Login: React.FC = () => {
           {/* Divider */}
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-border"></div>
             </div>
             <div className="relative flex justify-center text-xs">
-              <span className="px-2 bg-white text-gray-500">Secure Authentication</span>
+              <span className="px-2 bg-card text-muted-foreground">
+                Secure Authentication
+              </span>
             </div>
           </div>
 
           {/* Footer Info */}
           <div className="text-center space-y-2">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               By signing in, you agree to our Terms of Service and Privacy Policy
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-muted-foreground">
               Need help? Contact support@portal360.com.au
             </p>
           </div>
@@ -210,7 +217,7 @@ const Login: React.FC = () => {
 
       {/* Version Info */}
       <div className="absolute bottom-4 left-0 right-0 text-center">
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-muted-foreground">
           Portal360 v1.0 • © {new Date().getFullYear()} All rights reserved
         </p>
       </div>
