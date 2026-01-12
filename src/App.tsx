@@ -1,13 +1,14 @@
-// App.tsx - UPDATED PROTECTED LAYOUT
+// App.tsx
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Provider } from "react-redux";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { store } from "./store/store";
 import { AppLayout } from "./components/AppLayout";
+import ProtectedLayout from "./components/ProtectedLayout";
 import Login from "./pages/auth/Login";
 import Dashboard from "./pages/Dashboard";
 import Organizations from "./pages/Organizations";
@@ -25,30 +26,24 @@ import NotFound from "./pages/NotFound";
 import WebsiteQuery from "./pages/WebsiteQuery";
 import OrganizationDetailView from "./components/organizations/OrganizationDetailView";
 
-const queryClient = new QueryClient();
-
-// Improved cookie getter
-const getAuthToken = () => {
-  const cookie = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('authToken='));
-  return cookie ? cookie.split('=')[1] : null;
-};
-
-// Layout wrapper for protected routes
-const ProtectedLayout = () => {
-  const token = getAuthToken();
-  
-  if (!token) {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  return (
-    <AppLayout>
-      <Outlet />
-    </AppLayout>
-  );
-};
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: any) => {
+        // Don't retry on 401 errors
+        if (error?.response?.status === 401) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <Provider store={store}>
@@ -59,27 +54,28 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              
-              {/* Public route */}
+              {/* Public route - no authentication required */}
               <Route path="/auth" element={<Login />} />
               
-              {/* Protected routes with layout */}
+              {/* All protected routes */}
               <Route element={<ProtectedLayout />}>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/organizations" element={<Organizations />} />
-                <Route path="/organizations/:id" element={<OrganizationDetailView />} />
-                <Route path="/users" element={<Users />} />
-                <Route path="/subscriptions" element={<Subscriptions />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/website-content" element={<WebsiteContent />} />
-                <Route path="/help" element={<HelpSupport />} />
-                <Route path="/security" element={<Security />} />
-                <Route path="/email-triggers" element={<EmailTriggers />} />
-                <Route path="/ai-automation" element={<AIAutomation />} />
-                <Route path="/compliance" element={<Compliance />} />
-                <Route path="/website-queries" element={<WebsiteQuery />} />
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/organizations" element={<Organizations />} />
+                  <Route path="/organizations/:id" element={<OrganizationDetailView />} />
+                  <Route path="/users" element={<Users />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/features" element={<Features />} />
+                  <Route path="/website-content" element={<WebsiteContent />} />
+                  <Route path="/help" element={<HelpSupport />} />
+                  <Route path="/security" element={<Security />} />
+                  <Route path="/email-triggers" element={<EmailTriggers />} />
+                  <Route path="/ai-automation" element={<AIAutomation />} />
+                  <Route path="/compliance" element={<Compliance />} />
+                  <Route path="/website-queries" element={<WebsiteQuery />} />
+                </Route>
               </Route>
               
               {/* Catch-all route */}
