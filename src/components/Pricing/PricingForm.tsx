@@ -17,8 +17,76 @@ import { X, Tag, DollarSign, Star, Hash, Search, Plus, AlertCircle } from "lucid
 import FeatureAddDialog from "../features/FeatureAddDialog";
 import { getFeatures } from "@/ApiService/feature.service";
 
-export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loading = false }) {
-  const [form, setForm] = useState({
+// Type Definitions
+interface Feature {
+  _id?: string;
+  name: string;
+  value: string;
+}
+
+interface PlanFeature {
+  featureId: string | null;
+  name: string;
+  value: string;
+}
+
+interface PlanFormData {
+  name: string;
+  price: string;
+  period: "month" | "year" | "quarter";
+  description: string;
+  features: PlanFeature[];
+  highlighted: boolean;
+  order: string;
+  trial_period_days: string;
+  isActive: boolean;
+}
+
+interface ApiPlan {
+  _id: string;
+  name: string;
+  price: number;
+  period: "month" | "year" | "quarter";
+  description: string;
+  features: Array<{
+    name: string;
+    value: string;
+    featureId?: string;
+  }>;
+  highlighted: boolean;
+  planId: string;
+  stripePriceId: string;
+  isActive: boolean;
+  order: number;
+  trial_period_days: number;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+interface PricingFormProps {
+  defaultValue?: Partial<ApiPlan>;
+  onSubmit: (payload: {
+    name: string;
+    price: number;
+    period: "month" | "year" | "quarter";
+    description: string;
+    highlighted: boolean;
+    order: number;
+    trial_period_days: number;
+    isActive: boolean;
+    features: Array<{
+      featureId: string | null;
+      name: string;
+      value: string;
+    }>;
+  }) => void;
+  onCancel: () => void;
+  loading?: boolean;
+}
+
+export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loading = false }: PricingFormProps) {
+  const [form, setForm] = useState<PlanFormData>({
     name: "",
     price: "",
     period: "month",
@@ -26,15 +94,14 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
     features: [],
     highlighted: false,
     order: "1",
-    recommendedFor: "",
+    trial_period_days: "",
     isActive: true,
   });
 
-  const [featureList, setFeatureList] = useState([]);
-  const [filteredFeatures, setFilteredFeatures] = useState([]);
-  const [addFeatureOpen, setAddFeatureOpen] = useState(false);
+  const [featureList, setFeatureList] = useState<Feature[]>([]);
+  const [filteredFeatures, setFilteredFeatures] = useState<Feature[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Load All Features
   useEffect(() => {
@@ -52,7 +119,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
   useEffect(() => {
     if (!defaultValue?.features) return;
 
-    const mapped = defaultValue.features.map((f) => {
+    const mapped: PlanFeature[] = defaultValue.features.map((f) => {
       const match = featureList.find((x) => x.name === f.name);
 
       return {
@@ -62,10 +129,18 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
       };
     });
 
-    setForm((prev) => ({ ...prev, ...defaultValue, features: mapped }));
+    const defaultValueWithTrialPeriod = {
+      ...defaultValue,
+      trial_period_days: defaultValue.trial_period_days?.toString() || "",
+      price: defaultValue.price?.toString() || "",
+      order: defaultValue.order?.toString() || "1",
+      features: mapped,
+    };
+
+    setForm((prev) => ({ ...prev, ...defaultValueWithTrialPeriod }));
   }, [defaultValue, featureList]);
 
-  const updateField = (key, value) => {
+  const updateField = (key: keyof PlanFormData, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     // Clear error when user starts typing
     if (errors[key]) {
@@ -74,7 +149,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
   };
 
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors: Record<string, string> = {};
     
     // Name validation
     if (!form.name || form.name.trim() === "") {
@@ -128,11 +203,23 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
       }
     }
 
+    // Trial period validation
+    if (form.trial_period_days && form.trial_period_days.trim() !== "") {
+      if (!/^\d+$/.test(form.trial_period_days)) {
+        newErrors.trial_period_days = "Trial period must be a valid number";
+      } else {
+        const numTrial = Number(form.trial_period_days);
+        if (numTrial < 0) {
+          newErrors.trial_period_days = "Trial period cannot be negative";
+        }
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleAddFeature = (feature) => {
+  const handleAddFeature = (feature: Feature) => {
     if (form.features.some((f) => f.featureId === feature._id)) return;
 
     setForm((prev) => ({
@@ -140,7 +227,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
       features: [
         ...prev.features,
         {
-          featureId: feature._id,
+          featureId: feature._id || null,
           name: feature.name,
           value: "",
         },
@@ -153,14 +240,14 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
     }
   };
 
-  const removeFeature = (i) => {
+  const removeFeature = (i: number) => {
     setForm((prev) => ({
       ...prev,
       features: prev.features.filter((_, idx) => idx !== i),
     }));
   };
 
-  const handleFeatureValueChange = (i, v) => {
+  const handleFeatureValueChange = (i: number, v: string) => {
     const updated = [...form.features];
     updated[i].value = v;
     setForm((prev) => ({ ...prev, features: updated }));
@@ -195,7 +282,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
       description: form.description.trim(),
       highlighted: form.highlighted,
       order: Number(form.order),
-      recommendedFor: form.recommendedFor.trim(),
+      trial_period_days: form.trial_period_days ? Number(form.trial_period_days) : 0,
       isActive: form.isActive,
       features: validFeatures,
     };
@@ -262,13 +349,25 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
               </p>
             </div>
 
-            <div>
-              <Label>Recommended For</Label>
+            <div data-field="trial_period_days">
+              <Label>Trial Period (Days)</Label>
               <Input
-                value={form.recommendedFor}
-                onChange={(e) => updateField("recommendedFor", e.target.value)}
-                placeholder="No of users, team size, business type, etc."
+                type="number"
+                min="0"
+                value={form.trial_period_days}
+                onChange={(e) => updateField("trial_period_days", e.target.value)}
+                placeholder="e.g., 14 (for 14 days free trial)"
+                className={errors.trial_period_days ? "border-red-500" : ""}
               />
+              {errors.trial_period_days && (
+                <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.trial_period_days}
+                </p>
+              )}
+              <p className="text-xs text-gray-500 mt-1">
+                Enter 0 for no trial period. Leave empty to use default value.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -311,7 +410,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
               <Label>Billing Period *</Label>
               <Select 
                 value={form.period} 
-                onValueChange={(v) => updateField("period", v)}
+                onValueChange={(v: "month" | "year" | "quarter") => updateField("period", v)}
               >
                 <SelectTrigger className={errors.period ? "border-red-500" : ""}>
                   <SelectValue />
@@ -377,9 +476,6 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
                 Add at least one feature to this plan
               </p>
             </div>
-            <Button size="sm" onClick={() => setAddFeatureOpen(true)}>
-              <Plus className="h-4 w-4 mr-1" /> Add New Feature
-            </Button>
           </div>
 
           {/* Feature Count & Validation */}
@@ -499,15 +595,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
         </Button>
       </div>
 
-      {/* ADD FEATURE DIALOG */}
-      <FeatureAddDialog
-        open={addFeatureOpen}
-        onClose={() => setAddFeatureOpen(false)}
-        onSuccess={async () => {
-          await fetchFeatures();
-          setAddFeatureOpen(false);
-        }}
-      />
+  
     </div>
   );
 }

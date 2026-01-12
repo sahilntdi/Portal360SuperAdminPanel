@@ -15,10 +15,10 @@ import {
   updateFeature,
 } from "@/ApiService/feature.service";
 
-import FeatureAddDialog from "@/components/features/FeatureAddDialog";
+// import FeatureAddDialog from "@/components/features/FeatureAddDialog";
 
-import { FeatureEditDialog } from "@/components/features/FeatureEditDialog";
-import { FeatureDeleteDialog } from "@/components/features/FeatureDeleteDialog";
+// import { FeatureEditDialog } from "@/components/features/FeatureEditDialog";
+// import { FeatureDeleteDialog } from "@/components/features/FeatureDeleteDialog";
 
 export default function Features() {
   const [features, setFeatures] = useState([]);
@@ -26,9 +26,9 @@ export default function Features() {
   const { toast } = useToast();
 
   // Dialog states
-  const [openAdd, setOpenAdd] = useState(false);
-  const [editItem, setEditItem] = useState(null);
-  const [deleteItem, setDeleteItem] = useState(null);
+  // const [openAdd, setOpenAdd] = useState(false);
+  // const [editItem, setEditItem] = useState(null);
+  // const [deleteItem, setDeleteItem] = useState(null);
 
   // Fetch feature list
   const loadFeatures = async () => {
@@ -98,7 +98,7 @@ export default function Features() {
               </CardTitle>
               <CardDescription>Control feature availability per organization</CardDescription>
             </div>
-            <Button onClick={() => setOpenAdd(true)}>+ Add Feature</Button>
+            {/* <Button onClick={() => setOpenAdd(true)}>+ Add Feature</Button> */}
           </div>
         </CardHeader>
 
@@ -156,13 +156,13 @@ export default function Features() {
                         onCheckedChange={() => handleToggle(feature)}
                       />
 
-                      <Button variant="outline" size="sm" onClick={() => setEditItem(feature)}>
+                      {/* <Button variant="outline" size="sm" onClick={() => setEditItem(feature)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
 
                       <Button variant="destructive" size="sm" onClick={() => setDeleteItem(feature)}>
                         <Trash2 className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
                     </TableCell>
                   </TableRow>
                 ))
@@ -173,7 +173,7 @@ export default function Features() {
       </Card>
 
       {/* Dialogs */}
-      <FeatureAddDialog
+      {/* <FeatureAddDialog
         open={openAdd}
         onClose={() => setOpenAdd(false)}
         onSuccess={loadFeatures}
@@ -191,7 +191,7 @@ export default function Features() {
         featureId={deleteItem?._id}
         onClose={() => setDeleteItem(null)}
         onSuccess={loadFeatures}
-      />
+      /> */}
     </div>
   );
 }

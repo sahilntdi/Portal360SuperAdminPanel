@@ -400,18 +400,9 @@ export function OrganizationForm({
     );
   };
 
-  const handleSubmitForm = async (e: React.FormEvent, data: OrganizationFormValues) => {
-      e.preventDefault(); 
-    // Final validation before submission
+  const handleSubmitForm = async (data: OrganizationFormValues) => {
     const isValid = await form.trigger();
-    if (!isValid) {
-      // Scroll to first error
-      const firstError = document.querySelector('[data-error="true"]');
-      if (firstError) {
-        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-      return;
-    }
+    if (!isValid) return;
 
     const submitData: CreateOrganizationData | UpdateOrganizationData = {
       ...data,
@@ -425,6 +416,7 @@ export function OrganizationForm({
 
     await onSubmit(submitData);
   };
+
 
   const canProceedToStep2 = form.watch("email") && !form.getFieldState("email").error;
   const canProceedToStep3 = form.watch("firstName") && form.watch("lastName") &&
