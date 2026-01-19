@@ -1,159 +1,207 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/PageHeader";
-import { HelpCircle, FileText, Video, Upload, Search } from "lucide-react";
-import { useState } from "react";
-import { faqs, tutorials } from "@/data/data";
+import {
+  Upload,
+  Search,
+  MoreVertical,
+  Edit2,
+  Trash2,
+  HelpCircle,
+} from "lucide-react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import {
+  getSupportFaqs,
+  createSupportFaq,
+  updateSupportFaq,
+  deleteSupportFaq,
+} from "@/ApiService/helpandSupportFaq";
+
+import { SupportFaqDialog } from "@/components/helpSupport/SupportFaqDialog";
 
 export default function HelpSupport() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [faqs, setFaqs] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
+  const [editFaq, setEditFaq] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+
+  const loadFaqs = async () => {
+    setLoading(true);
+    const res = await getSupportFaqs();
+    setFaqs(res.data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadFaqs();
+  }, []);
+
+  const handleSave = async (data: any) => {
+    if (editFaq) {
+      await updateSupportFaq(editFaq._id, data);
+    } else {
+      await createSupportFaq(data);
+    }
+    setOpen(false);
+    setEditFaq(null);
+    loadFaqs();
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteSupportFaq(id);
+    loadFaqs();
+  };
+
+  const filteredFaqs = faqs.filter((f) =>
+    f.question?.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Help & Support"
-        description="Manage FAQs, tutorials, and documentation for all organizations"
+        description="Manage FAQs for support page"
       />
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total FAQs</CardTitle>
-            <HelpCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">127</div>
-            <p className="text-xs text-success">+12 this month</p>
-          </CardContent>
-        </Card>
+      {/* Actions */}
+      <div className="flex items-center justify-between gap-4">
+        <Button onClick={() => setOpen(true)}>
+          <Upload className="h-4 w-4 mr-2" />
+          Add FAQ
+        </Button>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Views</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">24,567</div>
-            <p className="text-xs text-success">+18% from last month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Video Tutorials</CardTitle>
-            <Video className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">18</div>
-            <p className="text-xs text-muted-foreground">2 in draft</p>
-          </CardContent>
-        </Card>
+        <div className="relative w-80">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            className="pl-10"
+            placeholder="Search FAQs..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>FAQ Management</CardTitle>
-              <CardDescription>Search, edit, and organize frequently asked questions</CardDescription>
-            </div>
-            <Button>
-              <Upload className="h-4 w-4 mr-2" />
-              Add FAQ
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search FAQs..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Question</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Views</TableHead>
-                <TableHead>Helpful</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {faqs.map((faq) => (
-                <TableRow key={faq.id}>
-                  <TableCell className="font-medium max-w-md">{faq.question}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{faq.category}</Badge>
-                  </TableCell>
-                  <TableCell>{faq.views.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{faq.helpful} helpful</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={faq.status === "published" ? "default" : "secondary"}>
-                      {faq.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Edit</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* TABLE */}
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Question</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Tutorials & Documentation</CardTitle>
-              <CardDescription>Manage video tutorials and help documents</CardDescription>
-            </div>
-            <Button>Upload Content</Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
+          <TableBody>
+            {!loading && filteredFaqs.length === 0 && (
               <TableRow>
-                <TableHead>Title</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Completions</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableCell colSpan={4}>
+                  <div className="text-center py-10">
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                      <HelpCircle className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <p className="font-medium">No FAQs found</p>
+                    <p className="text-sm text-muted-foreground">
+                      Create your first FAQ to get started
+                    </p>
+                  </div>
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tutorials.map((tutorial) => (
-                <TableRow key={tutorial.id}>
-                  <TableCell className="font-medium">{tutorial.title}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{tutorial.category}</Badge>
-                  </TableCell>
-                  <TableCell>{tutorial.duration}</TableCell>
-                  <TableCell>{tutorial.completions} completions</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm">Edit</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+            )}
+
+            {filteredFaqs.map((faq) => (
+              <TableRow key={faq._id}>
+                {/* QUESTION */}
+                <TableCell className="max-w-md">
+                  <div className="font-medium truncate">
+                    {faq.question}
+                  </div>
+                </TableCell>
+
+                {/* CATEGORY */}
+                <TableCell>
+                  <Badge variant="outline">
+                    {faq.category || "—"}
+                  </Badge>
+                </TableCell>
+
+                {/* STATUS */}
+                <TableCell>
+                  <Badge
+                    variant={faq.isActive ? "default" : "secondary"}
+                  >
+                    {faq.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </TableCell>
+
+                {/* ACTIONS */}
+                <TableCell className="text-right">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setEditFaq(faq);
+                          setOpen(true);
+                        }}
+                      >
+                        <Edit2 className="h-4 w-4 mr-2" />
+                        Edit FAQ
+                      </DropdownMenuItem>
+
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem
+                        className="text-red-600"
+                        onClick={() => handleDelete(faq._id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete FAQ
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* DIALOG */}
+      <SupportFaqDialog
+        open={open}
+        onClose={() => {
+          setOpen(false);
+          setEditFaq(null);
+        }}
+        onSubmit={handleSave}
+        initialData={editFaq}
+      />
     </div>
   );
 }

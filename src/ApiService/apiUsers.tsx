@@ -67,7 +67,7 @@ interface ApiResponse<T> {
 export class UserService {
   // Get all users
   static async getUsers(): Promise<User[]> {
-    const res = await instance.get<ApiResponse<ListUsersResponse>>("/user/tenant-users");
+    const res = await instance.get<ApiResponse<ListUsersResponse>>("/user");
     if (res.data.success) {
       return res.data.data.users || [];
     }
