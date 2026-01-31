@@ -4,9 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Provider } from "react-redux";
+import { Provider, useSelector } from "react-redux";
 import { ThemeProvider } from "./components/ThemeProvider";
-import { store } from "./store/store";
+import { store, RootState } from "./store/store";
 import { AppLayout } from "./components/AppLayout";
 import ProtectedLayout from "./components/ProtectedLayout";
 import Login from "./pages/auth/Login";
@@ -25,6 +25,8 @@ import Compliance from "./pages/Compliance";
 import NotFound from "./pages/NotFound";
 import WebsiteQuery from "./pages/WebsiteQuery";
 import OrganizationDetailView from "./components/organizations/OrganizationDetailView";
+import { useEffect } from "react";
+import { setupMessageListener } from "./utils/fcm.service";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,8 +47,29 @@ const queryClient = new QueryClient({
   },
 });
 
+const FCMListener = () => {
+  const { token } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (!token) return;
+
+    console.log("Setting up FCM message listener");
+    const unsubscribe = setupMessageListener();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+        console.log("FCM message listener removed");
+      }
+    };
+  }, [token]);
+
+  return null;
+};
+
 const App = () => (
   <Provider store={store}>
+    <FCMListener />
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="portal-theme">
         <TooltipProvider>
@@ -56,7 +79,7 @@ const App = () => (
             <Routes>
               {/* Public route - no authentication required */}
               <Route path="/auth" element={<Login />} />
-              
+
               {/* All protected routes */}
               <Route element={<ProtectedLayout />}>
                 <Route element={<AppLayout />}>
@@ -77,7 +100,7 @@ const App = () => (
                   <Route path="/website-queries" element={<WebsiteQuery />} />
                 </Route>
               </Route>
-              
+
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
