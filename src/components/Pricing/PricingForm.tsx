@@ -33,6 +33,8 @@ interface PlanFeature {
 interface PlanFormData {
   name: string;
   price: string;
+  discountAmount: string;
+  discountPeriod: string;
   period: "month" | "year" | "quarter";
   description: string;
   features: PlanFeature[];
@@ -46,6 +48,8 @@ interface ApiPlan {
   _id: string;
   name: string;
   price: number;
+  discountAmount: string;
+  discountPeriod: string;
   period: "month" | "year" | "quarter";
   description: string;
   features: Array<{
@@ -89,6 +93,8 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
   const [form, setForm] = useState<PlanFormData>({
     name: "",
     price: "",
+    discountAmount: "",
+    discountPeriod: "",
     period: "month",
     description: "",
     features: [],
@@ -133,6 +139,8 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
       ...defaultValue,
       trial_period_days: defaultValue.trial_period_days?.toString() || "",
       price: defaultValue.price?.toString() || "",
+      discountAmount: defaultValue.discountAmount?.toString() || "",
+      discountPeriod: defaultValue.discountPeriod || "",
       order: defaultValue.order?.toString() || "1",
       features: mapped,
     };
@@ -150,14 +158,14 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
+
     // Name validation
     if (!form.name || form.name.trim() === "") {
       newErrors.name = "Plan name is required";
     } else if (form.name.length < 2) {
       newErrors.name = "Plan name must be at least 2 characters";
     }
-    
+
     // Price validation
     if (!form.price || form.price.trim() === "") {
       newErrors.price = "Price is required";
@@ -171,26 +179,40 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
         newErrors.price = "Price cannot be negative";
       }
     }
-    
+
+    // Discount amount
+    if (form.discountAmount) {
+      if (!/^\d+$/.test(form.discountAmount)) {
+        newErrors.discountAmount = "Discount must be a valid number";
+      } else if (Number(form.discountAmount) >= Number(form.price)) {
+        newErrors.discountAmount = "Discount cannot be greater than or equal to price";
+      }
+    }
+
+    // Discount period
+    if (form.discountAmount && !form.discountPeriod) {
+      newErrors.discountPeriod = "Discount period is required";
+    }
+
     // Period validation
     if (!form.period) {
       newErrors.period = "Billing period is required";
     } else if (!['month', 'year', 'quarter'].includes(form.period)) {
       newErrors.period = "Invalid billing period";
     }
-    
+
     // Description validation
     if (!form.description || form.description.trim() === "") {
       newErrors.description = "Description is required";
     } else if (form.description.length < 10) {
       newErrors.description = "Description must be at least 10 characters";
     }
-    
+
     // Features validation
     if (!form.features || form.features.length === 0) {
       newErrors.features = "At least one feature is required";
     }
-    
+
     // Order validation
     if (!form.order || form.order.trim() === "") {
       newErrors.order = "Order is required";
@@ -233,7 +255,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
         },
       ],
     }));
-    
+
     // Clear feature error when a feature is added
     if (errors.features) {
       setErrors(prev => ({ ...prev, features: "" }));
@@ -255,7 +277,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
 
   const handleSubmit = () => {
     if (loading) return;
-    
+
     // Validate form
     if (!validateForm()) {
       // Scroll to first error
@@ -278,6 +300,10 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
     const payload = {
       name: form.name.trim(),
       price: Number(form.price),
+      discountAmount: form.discountAmount
+        ? Number(form.discountAmount)
+        : 0,
+      discountPeriod: form.discountPeriod || null,
       period: form.period,
       description: form.description.trim(),
       highlighted: form.highlighted,
@@ -295,7 +321,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
     if (searchTerm.trim() === "") {
       setFilteredFeatures(featureList);
     } else {
-      const filtered = featureList.filter((f) => 
+      const filtered = featureList.filter((f) =>
         f.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredFeatures(filtered);
@@ -315,8 +341,8 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
 
             <div data-field="name">
               <Label>Plan Name *</Label>
-              <Input 
-                value={form.name} 
+              <Input
+                value={form.name}
                 onChange={(e) => updateField("name", e.target.value)}
                 className={errors.name ? "border-red-500" : ""}
                 placeholder="e.g., Professional Plan"
@@ -331,8 +357,8 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
 
             <div data-field="description">
               <Label>Description *</Label>
-              <Textarea 
-                value={form.description} 
+              <Textarea
+                value={form.description}
                 onChange={(e) => updateField("description", e.target.value)}
                 className={errors.description ? "border-red-500" : ""}
                 placeholder="Describe what this plan includes"
@@ -406,10 +432,37 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
               )}
             </div>
 
+            <div data-field="discountAmount">
+              <Label>Discount Price *</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                placeholder="Enter price"
+                value={form.discountAmount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value.includes("-") || value.includes("–") || value.toLowerCase().includes("to")) {
+                    return;
+                  }
+                  if (!/^\d*$/.test(value)) {
+                    return;
+                  }
+                  updateField("discountAmount", value);
+                }}
+                className={errors.discountAmount ? "border-red-500" : ""}
+              />
+              {errors.discountAmount && (
+                <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.discountAmount}
+                </p>
+              )}
+            </div>
+
             <div data-field="period">
               <Label>Billing Period *</Label>
-              <Select 
-                value={form.period} 
+              <Select
+                value={form.period}
                 onValueChange={(v: "month" | "year" | "quarter") => updateField("period", v)}
               >
                 <SelectTrigger className={errors.period ? "border-red-500" : ""}>
@@ -429,11 +482,35 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
               )}
             </div>
 
+            <div data-field="discountPeriod">
+              <Label>Discount Period *</Label>
+              <Select
+                value={form.discountPeriod}
+                onValueChange={(val) => updateField("discountPeriod", val)}
+              >
+                <SelectTrigger className={errors.discountPeriod ? "border-red-500" : ""}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1_month">1 Month</SelectItem>
+                  <SelectItem value="3_months">3 Months</SelectItem>
+                  <SelectItem value="6_months">6 Months</SelectItem>
+                  <SelectItem value="lifetime">Lifetime</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.discountPeriod && (
+                <p className="text-sm text-red-500 flex items-center gap-1 mt-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.discountPeriod}
+                </p>
+              )}
+            </div>
+
             <div data-field="order">
               <Label>Order *</Label>
-              <Input 
-                type="number" 
-                value={form.order} 
+              <Input
+                type="number"
+                value={form.order}
                 onChange={(e) => updateField("order", e.target.value)}
                 className={errors.order ? "border-red-500" : ""}
                 min="1"
@@ -547,9 +624,9 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
                       onChange={(e) => handleFeatureValueChange(i, e.target.value)}
                       className="flex-1"
                     />
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => removeFeature(i)}
                       className="text-gray-500 hover:text-red-500"
                     >
@@ -586,8 +663,8 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
       {/* Bottom Buttons */}
       <div className="flex justify-end gap-3 pt-4">
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button 
-          onClick={handleSubmit} 
+        <Button
+          onClick={handleSubmit}
           disabled={loading}
           className="bg-blue-600 hover:bg-blue-700"
         >
@@ -595,7 +672,7 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
         </Button>
       </div>
 
-  
+
     </div>
   );
 }

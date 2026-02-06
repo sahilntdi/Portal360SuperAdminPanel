@@ -1,5 +1,7 @@
+// src/store/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { loginUser } from "../../ApiService/loginService";
+import { initializeFCMToken, cleanupFCMToken } from "../../utils/fcm.service";
 
 /* ================= TYPES ================= */
 
@@ -26,11 +28,9 @@ const getInitialToken = (): string | null => {
   for (let c of cookies) {
     const [name, value] = c.trim().split("=");
     if (name === "authToken") {
-      console.log("🍪 authToken found in cookie:", value);
       return value;
     }
   }
-  console.log("🍪 authToken NOT found in cookie");
   return null;
 };
 
@@ -39,10 +39,8 @@ const getInitialUser = (): User | null => {
   try {
     const stored = localStorage.getItem("authUser");
     if (stored) {
-      // console.log("💾 authUser found in localStorage:", JSON.parse(stored));
       return JSON.parse(stored);
     }
-    console.log("💾 authUser NOT found in localStorage");
     return null;
   } catch (err) {
     console.error("❌ Failed to parse authUser:", err);
@@ -70,8 +68,6 @@ export const login = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      // console.log("➡️ Login payload:", credentials);
-
       const deviceId =
         localStorage.getItem("deviceId") ||
         `device_${Math.random().toString(36).slice(2, 9)}_${Date.now()}`;
@@ -107,16 +103,16 @@ const authSlice = createSlice({
       state.token = null;
       state.error = null;
 
+      cleanupFCMToken().catch(console.error);
+
       document.cookie =
         "authToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
       localStorage.removeItem("deviceId");
       localStorage.removeItem("authUser");
 
-      // console.log("🧹 Cleared auth state, cookie & localStorage");
     },
 
     clearError: (state) => {
-      // console.log("🧼 Clearing auth error");
       state.error = null;
     },
   },
@@ -130,28 +126,34 @@ const authSlice = createSlice({
       })
 
       .addCase(login.fulfilled, (state, action: PayloadAction<any>) => {
-        // console.log("🎉 Login fulfilled payload:", action.payload);
 
         state.isLoading = false;
 
         const user = action.payload?.user ?? null;
         const token = action.payload?.token ?? null;
 
-        // console.log("👤 User set to:", user);
-        // console.log("🔑 Token set to:", token);
-
         state.user = user;
         state.token = token;
 
         if (token) {
           document.cookie = `authToken=${token}; path=/; max-age=86400`;
-          // console.log("🍪 authToken saved to cookie");
         }
 
         if (user) {
           localStorage.setItem("authUser", JSON.stringify(user));
-          // console.log("💾 authUser saved to localStorage");
         }
+
+        initializeFCMToken()
+          .then((success) => {
+            if (success) {
+              console.log("FCM token initialized successfully");
+            } else {
+              console.log("ℹFCM token initialization skipped");
+            }
+          })
+          .catch((error) => {
+            console.error("FCM initialization error:", error);
+          });
       })
 
       .addCase(login.rejected, (state, action) => {

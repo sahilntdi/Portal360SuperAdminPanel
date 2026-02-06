@@ -7,6 +7,8 @@ export interface PricingPlan {
   _id: string;
   name: string;
   price: number;
+  discountAmount?: number;
+  discountPeriod?: string;
   period: string;
   description: string;
   features: Array<string | { name: string; value: any }>;
