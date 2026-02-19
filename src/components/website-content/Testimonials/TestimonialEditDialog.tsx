@@ -11,7 +11,7 @@ import { TestimonialForm } from "./TestimonialForm";
 export function TestimonialEditDialog({ open, onClose, item, onSubmit }) {
   const [formData, setFormData] = useState({
     name: "",
-    role: "",
+    designation: "",
     company: "",
     message: "",
     rating: 5,
@@ -24,7 +24,7 @@ export function TestimonialEditDialog({ open, onClose, item, onSubmit }) {
     if (item) {
       setFormData({
         name: item.name || "",
-        role: item.designation || "",
+        designation: item.designation || "",
         company: item.company || "",
         message: item.message || "",
         rating: item.rating || 5,

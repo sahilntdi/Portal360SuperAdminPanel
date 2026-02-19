@@ -9,7 +9,9 @@ import { UserEditDialog } from "@/components/users/UserEditDialog";
 import { UserDeleteDialog } from "@/components/users/UserDeleteDialog";
 import { UserTable } from "@/components/users/UserTable";
 import { UserFilters } from "@/components/users/UserFilters";
-import { UserService, type User, type Organization } from "@/ApiService/apiUsers";
+import { Pagination } from "@/components/ui/pagination";
+import { UserService, type User, type Organization, type PaginatedResponse } from "@/ApiService/apiUsers";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -17,6 +19,12 @@ export default function UsersPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [orgLoading, setOrgLoading] = useState(true);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [pageSize] = useState(10); // You can make this configurable if needed
   
   // Dialog states
   const [addOpen, setAddOpen] = useState(false);
@@ -28,12 +36,15 @@ export default function UsersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
 
-  // Fetch data
-  const fetchUsers = async () => {
+  // Fetch users with pagination
+  const fetchUsers = async (page: number = currentPage) => {
     try {
       setLoading(true);
-      const data = await UserService.getUsers();
-      setUsers(data);
+      const response = await UserService.getUsers(page, pageSize);
+      setUsers(response.users);
+      setTotalPages(response.pagination.pages);
+      setTotalUsers(response.pagination.total);
+      setCurrentPage(response.pagination.page);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -57,11 +68,17 @@ export default function UsersPage() {
     }
   };
 
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchUsers(page);
+  };
+
   // Handle actions
   const handleCreateUser = async (data: any) => {
     try {
       await UserService.createUser(data);
-      await fetchUsers();
+      await fetchUsers(1); // Go back to first page after create
       toast({
         title: "Success",
         description: "User created successfully",
@@ -75,7 +92,7 @@ export default function UsersPage() {
   const handleUpdateUser = async (id: string, data: any) => {
     try {
       await UserService.updateUser(id, data);
-      await fetchUsers();
+      await fetchUsers(currentPage);
       toast({
         title: "Success",
         description: "User updated successfully",
@@ -89,7 +106,12 @@ export default function UsersPage() {
   const handleDeleteUser = async (id: string) => {
     try {
       await UserService.deleteUser(id);
-      await fetchUsers();
+      // If current page becomes empty after deletion, go to previous page
+      if (users.length === 1 && currentPage > 1) {
+        await fetchUsers(currentPage - 1);
+      } else {
+        await fetchUsers(currentPage);
+      }
       toast({
         title: "Success",
         description: "User deleted successfully",
@@ -103,7 +125,7 @@ export default function UsersPage() {
   const handleToggleStatus = async (id: string, status: boolean) => {
     try {
       await UserService.toggleUserStatus(id, status);
-      await fetchUsers();
+      await fetchUsers(currentPage);
       toast({
         title: "Success",
         description: `User ${status ? 'deactivated' : 'activated'} successfully`,
@@ -116,11 +138,11 @@ export default function UsersPage() {
 
   // Load data on mount
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(1);
     fetchOrganizations();
   }, []);
 
-  // Filter users
+  // Apply filters locally (since we're paginating on the server)
   const filteredUsers = users.filter((user) => {
     const searchMatch = `${user.firstName} ${user.lastName} ${user.email}`
       .toLowerCase()
@@ -136,7 +158,6 @@ export default function UsersPage() {
   });
 
   const activeUsers = users.filter(u => u.isActive).length;
-  const totalUsers = users.length;
 
   return (
     <div className="space-y-6">
@@ -145,14 +166,14 @@ export default function UsersPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
           <p className="text-muted-foreground">
-            Manage all system users ({totalUsers} total, {activeUsers} active)
+            Manage all system users ({totalUsers} total, {activeUsers} active on this page)
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchUsers}
+            onClick={() => fetchUsers(currentPage)}
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -169,45 +190,75 @@ export default function UsersPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Users</p>
-                <p className="text-2xl font-bold">{totalUsers}</p>
+            {loading ? (
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+                <Skeleton className="h-9 w-9 rounded-lg" />
               </div>
-              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                <UsersIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Users</p>
+                  <p className="text-2xl font-bold">{totalUsers}</p>
+                </div>
+                <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                  <UsersIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Active Users</p>
-                <p className="text-2xl font-bold">{activeUsers}</p>
+            {loading ? (
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+                <Skeleton className="h-9 w-9 rounded-lg" />
               </div>
-              <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
-                <div className="h-5 w-5 text-green-600 dark:text-green-400">✓</div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Active Users</p>
+                  <p className="text-2xl font-bold">{activeUsers}</p>
+                </div>
+                <div className="p-2 rounded-lg bg-green-100 dark:bg-green-900/30">
+                  <div className="h-5 w-5 text-green-600 dark:text-green-400">✓</div>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Admins</p>
-                <p className="text-2xl font-bold">
-                  {users.filter(u => u.role?._id === "679f31947a4e717c2fcd0099").length}
-                </p>
+            {loading ? (
+              <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+                <Skeleton className="h-9 w-9 rounded-lg" />
               </div>
-              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                <div className="h-5 w-5 text-purple-600 dark:text-purple-400">A</div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Admins</p>
+                  <p className="text-2xl font-bold">
+                    {users.filter(u => u.role?._id === "679f31947a4e717c2fcd0099").length}
+                  </p>
+                </div>
+                <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/30">
+                  <div className="h-5 w-5 text-purple-600 dark:text-purple-400">A</div>
+                </div>
               </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -241,6 +292,17 @@ export default function UsersPage() {
             onStatusToggle={handleToggleStatus}
             organizations={organizations}
           />
+          
+          {/* Pagination */}
+          {!loading && totalPages > 1 && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

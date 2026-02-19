@@ -21,6 +21,52 @@ export const WebsiteContentService = {
     instance.put(`testimonials/${id}`, payload),
   deleteTestimonial: (id) => instance.delete(`testimonials/${id}`),
 
+  /* -------------------- HERO SECTION -------------------- */
+  getHero: () => instance.get("hero"),
+
+  getHeroById: (id) => instance.get(`hero/${id}`),
+
+  addHero: (payload) => {
+    // Check if payload is FormData (for image upload)
+    if (payload instanceof FormData) {
+      return instance.post("hero", payload, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+    }
+    return instance.post("hero", payload);
+  },
+
+  updateHero: (id, payload) => {
+    // Check if payload is FormData (for image upload)
+    if (payload instanceof FormData) {
+      return instance.patch(`hero/${id}`, payload, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+    }
+    return instance.patch(`hero/${id}`, payload);
+  },
+
+  deleteHero: (id) => instance.delete(`hero/${id}`),
+
+  addDynamicWord: (heroId, payload) =>
+    instance.post(`hero/${heroId}/word`, payload),
+
+  removeDynamicWord: (heroId, payload) =>
+    instance.delete(`hero/${heroId}/word`, { data: payload }),
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   /* -------------------- BLOGS -------------------- */
   getBlogs: () => instance.get("blogs"),
 

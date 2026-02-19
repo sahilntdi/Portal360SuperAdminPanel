@@ -103,9 +103,9 @@ const { theme } = useTheme();
       {/* TOP HEADER */}
       <SidebarHeader>
         <div className="flex items-center gap-2">
-          <div className="h-12 w-12 rounded-lg overflow-hidden flex items-center justify-center bg-white">
+          <div className="h-12 w-12 rounded-lg overflow-hidden flex items-center justify-center">
             <img
-               src={theme === "dark" ? "/dark2.png" : "/p.png"}
+               src={theme === "dark" ? "/login-logo.png" : "/login-logo.png"}
               alt="Portal 360 Logo"
               className="h-full w-full object-contain"
             />

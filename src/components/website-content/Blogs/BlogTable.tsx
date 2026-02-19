@@ -83,9 +83,6 @@ export function BlogTable({ items, onEdit, onDelete }) {
                   <span className="text-sm font-mono bg-muted px-2 py-1 rounded truncate max-w-[180px]">
                     /{blog.slug}
                   </span>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Button>
                 </div>
               </TableCell>
               

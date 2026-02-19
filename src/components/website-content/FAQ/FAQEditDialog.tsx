@@ -2,17 +2,19 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FAQForm } from "./FAQForm";
+import { toast } from "sonner";
 
-export function FAQEditDialog({ open, onClose, item, onSubmit }) {
+export function FAQEditDialog({ open, onClose, item, onSubmit, items }) {
   const [formData, setFormData] = useState({
     question: "",
     answer: "",
     category: "general",
     order: 1,
-    _id: null
+    _id: null,
   });
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset form when item changes
   useEffect(() => {
     if (item) {
       setFormData({
@@ -20,19 +22,39 @@ export function FAQEditDialog({ open, onClose, item, onSubmit }) {
         answer: item.answer || "",
         category: item.category || "general",
         order: item.order || 1,
-        _id: item._id
+        _id: item._id,
       });
+      setError("");
+      setIsSubmitting(false);
     }
   }, [item]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData._id) {
-      console.error("No _id found in FAQ form data");
+      toast.error("Invalid FAQ");
       return;
     }
-    
-    onSubmit(formData);
-    onClose();
+
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      await onSubmit(formData);
+      onClose();
+    } catch (err) {
+      console.log("Error in EditDialog:", err);
+      
+      // Extract error message from the error object
+      const errorMessage = err.response?.data?.message || err.message || "Failed to update FAQ";
+      
+      if (errorMessage.includes("Order number already exists")) {
+        setError("This order number is already taken");
+      } else {
+        toast.error(errorMessage);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!item) return null;
@@ -44,9 +66,18 @@ export function FAQEditDialog({ open, onClose, item, onSubmit }) {
           <DialogTitle>Edit FAQ</DialogTitle>
         </DialogHeader>
 
-        <FAQForm formData={formData} setFormData={setFormData} />
-        <Button className="mt-4 w-full" onClick={handleSave}>
-          Save Changes
+        <FAQForm 
+          formData={formData} 
+          setFormData={setFormData}
+          error={error}
+          setError={setError}
+        />
+        <Button 
+          className="mt-4 w-full" 
+          onClick={handleSave}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving..." : "Save Changes"}
         </Button>
       </DialogContent>
     </Dialog>

@@ -14,10 +14,9 @@ interface UserEditDialogProps {
   onClose: () => void;
   onUpdate: (id: string, data: any) => Promise<void>;
   user: User | null;
-  organizations: Array<{ _id: string; businessName?: string; email?: string }>;
 }
 
-export function UserEditDialog({ open, onClose, onUpdate, user, organizations }: UserEditDialogProps) {
+export function UserEditDialog({ open, onClose, onUpdate, user }: UserEditDialogProps) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -25,7 +24,6 @@ export function UserEditDialog({ open, onClose, onUpdate, user, organizations }:
     lastName: "",
     email: "",
     role: "",
-    organization: "",
     isActive: true,
   });
 
@@ -36,7 +34,6 @@ export function UserEditDialog({ open, onClose, onUpdate, user, organizations }:
         lastName: user.lastName || "",
         email: user.email || "",
         role: user.role?._id || "",
-        organization: user.organization?._id || "",
         isActive: user.isActive || true,
       });
     }
@@ -54,7 +51,6 @@ export function UserEditDialog({ open, onClose, onUpdate, user, organizations }:
         lastName: form.lastName,
         email: form.email,
         role: form.role,
-        organization: form.organization ? [form.organization] : [],
         isActive: form.isActive,
       });
       
@@ -121,24 +117,7 @@ export function UserEditDialog({ open, onClose, onUpdate, user, organizations }:
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="organization">Organization</Label>
-            <Select
-              value={form.organization}
-              onValueChange={(value) => setForm({ ...form, organization: value })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select organization" />
-              </SelectTrigger>
-              <SelectContent>
-                {organizations.map((org) => (
-                  <SelectItem key={org._id} value={org._id}>
-                    {org.businessName || org.email || org._id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+         
 
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>

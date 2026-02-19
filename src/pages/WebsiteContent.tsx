@@ -73,6 +73,16 @@ import { IntegrationAddDialog } from "@/components/website-content/Integrations/
 import { IntegrationEditDialog } from "@/components/website-content/Integrations/IntegrationEditDialog";
 import { IntegrationDeleteDialog } from "@/components/website-content/Integrations/IntegrationDeleteDialog";
 
+// HERO
+
+// Add these imports
+import { HeroTable } from "@/components/website-content/Hero/HeroTable";
+import { HeroAddDialog } from "@/components/website-content/Hero/HeroAddDialog";
+import { HeroEditDialog } from "@/components/website-content/Hero/HeroEditDialog";
+import { HeroDeleteDialog } from "@/components/website-content/Hero/HeroDeleteDialog";
+import { MobileHeroCard } from "@/components/website-content/Hero/MobileHeroCard";
+
+
 // Mobile Components
 import { MobileModernTeamCard } from "@/components/website-content/ModernTeams/MobileModernTeamCard";
 import { MobileSuperadminCard } from "@/components/website-content/SuperadminControls/MobileSuperadminCard";
@@ -99,7 +109,7 @@ export default function WebsiteContentPage() {
   const [modernTeams, setModernTeams] = useState([]);
   const [superadmin, setSuperadmin] = useState([]);
   const [integrations, setIntegrations] = useState([]);
-
+  const [heroes, setHeroes] = useState([]);
   // Dialog states
   const [addStepOpen, setAddStepOpen] = useState(false);
   const [editStepOpen, setEditStepOpen] = useState(false);
@@ -136,7 +146,10 @@ export default function WebsiteContentPage() {
   const [deleteIntegrationOpen, setDeleteIntegrationOpen] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState(null);
 
-
+  const [addHeroOpen, setAddHeroOpen] = useState(false);
+  const [editHeroOpen, setEditHeroOpen] = useState(false);
+  const [deleteHeroOpen, setDeleteHeroOpen] = useState(false);
+  const [selectedHero, setSelectedHero] = useState(null);
   // Check mobile screen size
   useEffect(() => {
     const checkMobile = () => {
@@ -212,53 +225,82 @@ export default function WebsiteContentPage() {
       toast.error("Failed to load Integrations");
     }
   };
-const isDuplicateStepNumber = (stepNumber, currentId = null) => {
-  return steps.some(
-    (s) =>
-      Number(s.stepNumber) === Number(stepNumber) &&
-      s._id !== currentId
-  );
-};
+  const loadHeroes = async () => {
+    try {
+      const res = await WebsiteContentService.getHero();
+      console.log("Hero API Response:", res);
+
+      // The API returns a single object inside res.data.data
+      // Structure: { success: true, message: "...", data: { ...hero object... } }
+
+      let heroesData = [];
+
+      if (res.data?.data && typeof res.data.data === 'object' && !Array.isArray(res.data.data)) {
+        // Single hero object - wrap it in an array
+        heroesData = [res.data.data];
+      } else if (res.data?.data && Array.isArray(res.data.data)) {
+        // Multiple heroes (if API ever returns array)
+        heroesData = res.data.data;
+      } else if (res.data && Array.isArray(res.data)) {
+        // Alternative structure
+        heroesData = res.data;
+      }
+
+      console.log("Heroes being set:", heroesData);
+      setHeroes(heroesData);
+    } catch (error) {
+      console.error("Failed to load Heroes:", error);
+      toast.error("Failed to load Heroes");
+    }
+  };
+
+  const isDuplicateStepNumber = (stepNumber, currentId = null) => {
+    return steps.some(
+      (s) =>
+        Number(s.stepNumber) === Number(stepNumber) &&
+        s._id !== currentId
+    );
+  };
 
   // Handlers
-const handleAddStep = async (data) => {
-  try {
-    if (isDuplicateStepNumber(data.stepNumber)) {
-      toast.error(`Step number ${data.stepNumber} already exists`);
-      return;
-    }
+  const handleAddStep = async (data) => {
+    try {
+      if (isDuplicateStepNumber(data.stepNumber)) {
+        toast.error(`Step number ${data.stepNumber} already exists`);
+        return;
+      }
 
-    await WebsiteContentService.addStep(data);
-    toast.success("Step added successfully");
-    loadSteps();
-  } catch (error) {
-    toast.error("Failed to add step");
-    console.error(error);
-  }
-};
+      await WebsiteContentService.addStep(data);
+      toast.success("Step added successfully");
+      loadSteps();
+    } catch (error) {
+      toast.error("Failed to add step");
+      console.error(error);
+    }
+  };
 
 
   const handleEditStep = async (data) => {
-  try {
-    const stepId = data._id;
-    if (!stepId) {
-      toast.error("Step ID is required");
-      return;
-    }
+    try {
+      const stepId = data._id;
+      if (!stepId) {
+        toast.error("Step ID is required");
+        return;
+      }
 
-    if (isDuplicateStepNumber(data.stepNumber, stepId)) {
-      toast.error(`Step number ${data.stepNumber} already exists`);
-      return;
-    }
+      if (isDuplicateStepNumber(data.stepNumber, stepId)) {
+        toast.error(`Step number ${data.stepNumber} already exists`);
+        return;
+      }
 
-    await WebsiteContentService.updateStep(stepId, data);
-    toast.success("Step updated successfully");
-    loadSteps();
-  } catch (error) {
-    toast.error("Failed to update step");
-    console.error(error);
-  }
-};
+      await WebsiteContentService.updateStep(stepId, data);
+      toast.success("Step updated successfully");
+      loadSteps();
+    } catch (error) {
+      toast.error("Failed to update step");
+      console.error(error);
+    }
+  };
 
 
   const handleDeleteStep = async (item) => {
@@ -284,8 +326,9 @@ const handleAddStep = async (data) => {
       toast.success("FAQ added successfully");
       loadFAQs();
     } catch (error) {
-      toast.error("Failed to add FAQ");
-      console.error(error);
+      console.error("Add FAQ error:", error);
+      // Re-throw the error so it can be caught in the dialog
+      throw error;
     }
   };
 
@@ -300,14 +343,15 @@ const handleAddStep = async (data) => {
       toast.success("FAQ updated successfully");
       loadFAQs();
     } catch (error) {
-      toast.error("Failed to update FAQ");
-      console.error(error);
+      console.error("Edit FAQ error:", error);
+      // Re-throw the error so it can be caught in the dialog
+      throw error;
     }
   };
 
   const handleDeleteFAQ = async (item) => {
     try {
-      const faqId = item._id;
+      const faqId = item._id || item.id;
       if (!faqId) {
         toast.error("FAQ ID is required");
         return;
@@ -316,8 +360,8 @@ const handleAddStep = async (data) => {
       toast.success("FAQ deleted successfully");
       loadFAQs();
     } catch (error) {
+      console.error("Delete FAQ error:", error);
       toast.error("Failed to delete FAQ");
-      console.error(error);
     }
   };
 
@@ -536,6 +580,63 @@ const handleAddStep = async (data) => {
     }
   };
 
+
+  // Add with other handlers
+const handleAddHero = async (data) => {
+  try {
+    const response = await WebsiteContentService.addHero(data);
+    toast.success("Hero added successfully");
+    loadHeroes(); // This will reload and show the new hero
+  } catch (error) {
+    console.error("Failed to add hero:", error);
+    toast.error(error.response?.data?.message || "Failed to add hero");
+  }
+};
+
+const handleEditHero = async (data) => {
+  try {
+    const heroId = selectedHero._id;
+    if (!heroId) {
+      toast.error("Hero ID is required");
+      return;
+    }
+    const response = await WebsiteContentService.updateHero(heroId, data);
+    toast.success("Hero updated successfully");
+    loadHeroes(); // Reload to get updated data
+  } catch (error) {
+    console.error("Failed to update hero:", error);
+    toast.error(error.response?.data?.message || "Failed to update hero");
+  }
+};
+
+const handleDeleteHero = async (item) => {
+  try {
+    const heroId = item._id;
+    if (!heroId) {
+      toast.error("Hero ID is required");
+      return;
+    }
+    await WebsiteContentService.deleteHero(heroId);
+    toast.success("Hero deleted successfully");
+    loadHeroes(); // Reload (will be empty array after delete)
+  } catch (error) {
+    console.error("Failed to delete hero:", error);
+    toast.error(error.response?.data?.message || "Failed to delete hero");
+  }
+};
+
+  const handleToggleHeroStatus = async (item) => {
+    try {
+      const newStatus = !item.isActive;
+      await WebsiteContentService.updateHero(item._id, { isActive: newStatus });
+      toast.success(`Hero ${newStatus ? 'activated' : 'deactivated'}`);
+      loadHeroes();
+    } catch (error) {
+      console.error("Failed to toggle status:", error);
+      toast.error("Failed to update status");
+    }
+  };
+
   // Integration Handlers - Fixed
   const handleAddIntegration = async (data) => {
     try {
@@ -637,6 +738,7 @@ const handleAddStep = async (data) => {
     loadModernTeams();
     loadSuperadmin();
     loadIntegrations();
+    loadHeroes();
   }, []);
 
   // Get stats for the active tab
@@ -648,7 +750,8 @@ const handleAddStep = async (data) => {
       blogs: { count: blogs.length, color: "bg-amber-500", label: "Blogs", singular: "Blog" },
       modernTeams: { count: modernTeams.length, color: "bg-pink-500", label: "Features", singular: "Feature" },
       superadmin: { count: superadmin.length, color: "bg-red-500", label: "Controls", singular: "Control" },
-      integrations: { count: integrations.length, color: "bg-indigo-500", label: "Integrations", singular: "Integration" }
+      integrations: { count: integrations.length, color: "bg-indigo-500", label: "Integrations", singular: "Integration" },
+      heroes: { count: heroes.length, color: "bg-teal-500", label: "Heroes", singular: "Hero" },
     };
     return stats[activeTab] || { count: 0, color: "bg-gray-500", label: "Items", singular: "Item" };
   };
@@ -750,6 +853,21 @@ const handleAddStep = async (data) => {
             ))}
           </div>
         );
+
+      case "heroes":
+        return (
+          <div className="space-y-4">
+            {heroes.map((item) => (
+              <MobileHeroCard
+                key={item._id}
+                item={item}
+                onEdit={() => { setSelectedHero(item); setEditHeroOpen(true); }}
+                onDelete={() => { setSelectedHero(item); setDeleteHeroOpen(true); }}
+                onToggleStatus={handleToggleHeroStatus}
+              />
+            ))}
+          </div>
+        );
       default:
         return null;
     }
@@ -814,6 +932,16 @@ const handleAddStep = async (data) => {
             onDelete={(item) => { setSelectedIntegration(item); setDeleteIntegrationOpen(true); }}
           />
         );
+
+      case "heroes":
+        return (
+          <HeroTable
+            items={heroes}
+            onEdit={(item) => { setSelectedHero(item); setEditHeroOpen(true); }}
+            onDelete={(item) => { setSelectedHero(item); setDeleteHeroOpen(true); }}
+            onToggleStatus={handleToggleHeroStatus}
+          />
+        );
       default:
         return null;
     }
@@ -829,6 +957,7 @@ const handleAddStep = async (data) => {
       case "superadmin": return "Add Control";
       case "integrations": return "Add Integration";
       default: return "Add Item";
+      case "heroes": return "Add Hero";
     }
   };
 
@@ -959,6 +1088,17 @@ const handleAddStep = async (data) => {
                         <span className="sm:hidden">Apps</span>
                       </span>
                     </TabsTrigger>
+
+                    <TabsTrigger
+                      value="heroes"
+                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
+                    >
+                      <span className="flex items-center gap-1.5 whitespace-nowrap">
+                        <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                        <span className="hidden sm:inline">Hero Sections</span>
+                        <span className="sm:hidden">Hero</span>
+                      </span>
+                    </TabsTrigger>
                   </div>
                 </TabsList>
               </ScrollArea>
@@ -975,6 +1115,7 @@ const handleAddStep = async (data) => {
                       {activeTab === "modernTeams" && "Modern Teams Features"}
                       {activeTab === "superadmin" && "Superadmin Controls"}
                       {activeTab === "integrations" && "Integrations"}
+                      {activeTab === "heroes" && "Hero Sections"}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
                       {activeTab === "steps" && "Manage the step-by-step guide for your users"}
@@ -984,6 +1125,7 @@ const handleAddStep = async (data) => {
                       {activeTab === "modernTeams" && "Manage team features and capabilities"}
                       {activeTab === "superadmin" && "Manage administrative features and settings"}
                       {activeTab === "integrations" && "Manage third-party integrations and connections"}
+                      {activeTab === "heroes" && "Manage hero sections and rotating text animations"}
                     </p>
                   </div>
                   <Button
@@ -996,6 +1138,7 @@ const handleAddStep = async (data) => {
                         case "modernTeams": setAddModernOpen(true); break;
                         case "superadmin": setAddSuperOpen(true); break;
                         case "integrations": setAddIntegrationOpen(true); break;
+                        case "heroes": setAddHeroOpen(true); break;
                       }
                     }}
                     className="gap-2 w-full sm:w-auto"
@@ -1064,7 +1207,7 @@ const handleAddStep = async (data) => {
       </div>
 
       {/* Dialogs */}
-      <HowItWorksAddDialog open={addStepOpen} onClose={() => setAddStepOpen(false)} onSubmit={handleAddStep}  steps={steps} />
+      <HowItWorksAddDialog open={addStepOpen} onClose={() => setAddStepOpen(false)} onSubmit={handleAddStep} steps={steps} />
       <HowItWorksEditDialog open={editStepOpen} item={selectedStep} onClose={() => setEditStepOpen(false)} onSubmit={handleEditStep} />
       <HowItWorksDeleteDialog
         open={deleteStepOpen}
@@ -1096,6 +1239,26 @@ const handleAddStep = async (data) => {
       <IntegrationAddDialog open={addIntegrationOpen} onClose={() => setAddIntegrationOpen(false)} onSubmit={handleAddIntegration} />
       <IntegrationEditDialog open={editIntegrationOpen} onClose={() => setEditIntegrationOpen(false)} item={selectedIntegration} onSubmit={handleEditIntegration} />
       <IntegrationDeleteDialog open={deleteIntegrationOpen} onClose={() => setDeleteIntegrationOpen(false)} item={selectedIntegration} onSubmit={handleDeleteIntegration} />
+
+      <HeroAddDialog
+        open={addHeroOpen}
+        onClose={() => setAddHeroOpen(false)}
+        onSubmit={handleAddHero}
+      />
+
+      <HeroEditDialog
+        open={editHeroOpen}
+        item={selectedHero}
+        onClose={() => setEditHeroOpen(false)}
+        onSubmit={handleEditHero}
+      />
+
+      <HeroDeleteDialog
+        open={deleteHeroOpen}
+        item={selectedHero}
+        onClose={() => setDeleteHeroOpen(false)}
+        onSubmit={handleDeleteHero}
+      />
     </div>
   );
 }

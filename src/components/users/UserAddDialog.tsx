@@ -23,18 +23,17 @@ export function UserAddDialog({ open, onClose, onCreate, organizations, orgLoadi
     lastName: "",
     email: "",
     password: "",
-    role: "",
-    tenantId: "",
+    role: ""
   });
 
 
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   
-  if (!form.tenantId) {
+  if (!form.role) {
     toast({
       title: "Error",
-      description: "Please select an organization",
+      description: "Please select a role",
       variant: "destructive",
     });
     return;
@@ -48,7 +47,6 @@ const handleSubmit = async (e: React.FormEvent) => {
       email: form.email,
       password: form.password,
       role: form.role,
-      tenantId: [form.tenantId],
     });
     
     setForm({
@@ -56,8 +54,7 @@ const handleSubmit = async (e: React.FormEvent) => {
       lastName: "",
       email: "",
       password: "",
-      role: "",
-      tenantId: "",
+      role: ""
     });
     onClose();
   } catch (error: any) {
@@ -127,32 +124,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="organization">Organization *</Label>
-            {orgLoading ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Loading organizations...
-              </div>
-            ) : (
-              <Select
-                value={form.tenantId}
-                onValueChange={(value) => setForm({ ...form, tenantId: value })}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select organization" />
-                </SelectTrigger>
-                <SelectContent>
-                  {organizations.map((org) => (
-                    <SelectItem key={org._id} value={org._id}>
-                      {org.businessName || org.email || org._id}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
+          
 
           <div className="space-y-2">
             <Label htmlFor="role">Role *</Label>

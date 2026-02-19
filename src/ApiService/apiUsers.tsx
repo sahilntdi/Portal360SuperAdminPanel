@@ -30,6 +30,18 @@ export interface Organization {
   email?: string;
 }
 
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+}
+
+export interface PaginatedResponse {
+  users: User[];
+  pagination: PaginationInfo;
+}
+
 interface CreateUserData {
   firstName: string;
   lastName: string;
@@ -48,16 +60,6 @@ interface UpdateUserData {
   password?: string;
 }
 
-interface ListUsersResponse {
-  users: User[];
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    pages: number;
-  };
-}
-
 interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -65,11 +67,13 @@ interface ApiResponse<T> {
 }
 
 export class UserService {
-  // Get all users
-  static async getUsers(): Promise<User[]> {
-    const res = await instance.get<ApiResponse<ListUsersResponse>>("/user");
+  // Get all users with pagination
+  static async getUsers(page: number = 1, limit: number = 10): Promise<PaginatedResponse> {
+    const res = await instance.get<ApiResponse<PaginatedResponse>>("/user", {
+      params: { page, limit }
+    });
     if (res.data.success) {
-      return res.data.data.users || [];
+      return res.data.data;
     }
     throw new Error(res.data.message || "Failed to fetch users");
   }

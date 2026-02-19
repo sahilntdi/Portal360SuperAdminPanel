@@ -7,3 +7,4 @@ export * from "./EmailTrigger.service";
 export * from "./SecurityService";
 export * from "./helpandSupportFaq";
 export * from "./dashboard";
+export * from "./ApiService"
