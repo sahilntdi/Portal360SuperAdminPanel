@@ -27,46 +27,47 @@ export function UserAddDialog({ open, onClose, onCreate, organizations, orgLoadi
   });
 
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  
-  if (!form.role) {
-    toast({
-      title: "Error",
-      description: "Please select a role",
-      variant: "destructive",
-    });
-    return;
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  setLoading(true);
-  try {
-    await onCreate({
-      firstName: form.firstName,
-      lastName: form.lastName,
-      email: form.email,
-      password: form.password,
-      role: form.role,
-    });
-    
-    setForm({
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      role: ""
-    });
-    onClose();
-  } catch (error: any) {
-    toast({
-      title: "Error",
-      description: error.message || "Failed to create user",
-      variant: "destructive",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+    if (!form.role) {
+      toast({
+        title: "Error",
+        description: "Please select a role",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await onCreate({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        password: form.password,
+        role: form.role,
+      });
+
+      // Reset form on success
+      setForm({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        role: ""
+      });
+      // Parent handler closes dialog and shows toast after table refresh
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create user",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -74,7 +75,7 @@ const handleSubmit = async (e: React.FormEvent) => {
         <DialogHeader>
           <DialogTitle>Create New User</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -87,7 +88,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="lastName">Last Name *</Label>
               <Input
@@ -124,7 +125,7 @@ const handleSubmit = async (e: React.FormEvent) => {
             />
           </div>
 
-          
+
 
           <div className="space-y-2">
             <Label htmlFor="role">Role *</Label>

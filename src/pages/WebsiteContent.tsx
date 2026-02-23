@@ -82,6 +82,17 @@ import { HeroEditDialog } from "@/components/website-content/Hero/HeroEditDialog
 import { HeroDeleteDialog } from "@/components/website-content/Hero/HeroDeleteDialog";
 import { MobileHeroCard } from "@/components/website-content/Hero/MobileHeroCard";
 
+// Feature Section
+import { FeatureSectionTable } from "@/components/website-content/FeatureSection/FeatureSectionTable";
+import { FeatureSectionPreview } from "@/components/website-content/FeatureSection/FeatureSectionPreview";
+import { FeatureMetaAddDialog } from "@/components/website-content/FeatureSection/FeatureMetaAddDialog";
+import { FeatureMetaEditDialog } from "@/components/website-content/FeatureSection/FeatureMetaEditDialog";
+import { FeatureMetaDeleteDialog } from "@/components/website-content/FeatureSection/FeatureMetaDeleteDialog";
+import { FeatureCardAddDialog } from "@/components/website-content/FeatureSection/FeatureCardAddDialog";
+import { FeatureCardEditDialog } from "@/components/website-content/FeatureSection/FeatureCardEditDialog";
+import { FeatureCardDeleteDialog } from "@/components/website-content/FeatureSection/FeatureCardDeleteDialog";
+import { MobileFeatureSectionCard } from "@/components/website-content/FeatureSection/MobileFeatureSectionCard";
+
 
 // Mobile Components
 import { MobileModernTeamCard } from "@/components/website-content/ModernTeams/MobileModernTeamCard";
@@ -110,6 +121,8 @@ export default function WebsiteContentPage() {
   const [superadmin, setSuperadmin] = useState([]);
   const [integrations, setIntegrations] = useState([]);
   const [heroes, setHeroes] = useState([]);
+  const [featureMeta, setFeatureMeta] = useState([]);
+  const [featureCards, setFeatureCards] = useState([]);
   // Dialog states
   const [addStepOpen, setAddStepOpen] = useState(false);
   const [editStepOpen, setEditStepOpen] = useState(false);
@@ -150,6 +163,16 @@ export default function WebsiteContentPage() {
   const [editHeroOpen, setEditHeroOpen] = useState(false);
   const [deleteHeroOpen, setDeleteHeroOpen] = useState(false);
   const [selectedHero, setSelectedHero] = useState(null);
+
+  const [addFeatureMetaOpen, setAddFeatureMetaOpen] = useState(false);
+  const [editFeatureMetaOpen, setEditFeatureMetaOpen] = useState(false);
+  const [deleteFeatureMetaOpen, setDeleteFeatureMetaOpen] = useState(false);
+  const [selectedFeatureMeta, setSelectedFeatureMeta] = useState(null);
+
+  const [addFeatureCardOpen, setAddFeatureCardOpen] = useState(false);
+  const [editFeatureCardOpen, setEditFeatureCardOpen] = useState(false);
+  const [deleteFeatureCardOpen, setDeleteFeatureCardOpen] = useState(false);
+  const [selectedFeatureCard, setSelectedFeatureCard] = useState(null);
   // Check mobile screen size
   useEffect(() => {
     const checkMobile = () => {
@@ -225,6 +248,17 @@ export default function WebsiteContentPage() {
       toast.error("Failed to load Integrations");
     }
   };
+  const loadFeatureSection = async () => {
+    try {
+      const res = await WebsiteContentService.getFeatureSection();
+      const data = res.data?.data || res.data || {};
+      setFeatureMeta(data.meta ? [data.meta] : data.metas || []);
+      setFeatureCards(data.cards || []);
+    } catch {
+      toast.error("Failed to load Features Section");
+    }
+  };
+
   const loadHeroes = async () => {
     try {
       const res = await WebsiteContentService.getHero();
@@ -582,48 +616,48 @@ export default function WebsiteContentPage() {
 
 
   // Add with other handlers
-const handleAddHero = async (data) => {
-  try {
-    const response = await WebsiteContentService.addHero(data);
-    toast.success("Hero added successfully");
-    loadHeroes(); // This will reload and show the new hero
-  } catch (error) {
-    console.error("Failed to add hero:", error);
-    toast.error(error.response?.data?.message || "Failed to add hero");
-  }
-};
-
-const handleEditHero = async (data) => {
-  try {
-    const heroId = selectedHero._id;
-    if (!heroId) {
-      toast.error("Hero ID is required");
-      return;
+  const handleAddHero = async (data) => {
+    try {
+      const response = await WebsiteContentService.addHero(data);
+      toast.success("Hero added successfully");
+      loadHeroes(); // This will reload and show the new hero
+    } catch (error) {
+      console.error("Failed to add hero:", error);
+      toast.error(error.response?.data?.message || "Failed to add hero");
     }
-    const response = await WebsiteContentService.updateHero(heroId, data);
-    toast.success("Hero updated successfully");
-    loadHeroes(); // Reload to get updated data
-  } catch (error) {
-    console.error("Failed to update hero:", error);
-    toast.error(error.response?.data?.message || "Failed to update hero");
-  }
-};
+  };
 
-const handleDeleteHero = async (item) => {
-  try {
-    const heroId = item._id;
-    if (!heroId) {
-      toast.error("Hero ID is required");
-      return;
+  const handleEditHero = async (data) => {
+    try {
+      const heroId = selectedHero._id;
+      if (!heroId) {
+        toast.error("Hero ID is required");
+        return;
+      }
+      const response = await WebsiteContentService.updateHero(heroId, data);
+      toast.success("Hero updated successfully");
+      loadHeroes(); // Reload to get updated data
+    } catch (error) {
+      console.error("Failed to update hero:", error);
+      toast.error(error.response?.data?.message || "Failed to update hero");
     }
-    await WebsiteContentService.deleteHero(heroId);
-    toast.success("Hero deleted successfully");
-    loadHeroes(); // Reload (will be empty array after delete)
-  } catch (error) {
-    console.error("Failed to delete hero:", error);
-    toast.error(error.response?.data?.message || "Failed to delete hero");
-  }
-};
+  };
+
+  const handleDeleteHero = async (item) => {
+    try {
+      const heroId = item._id;
+      if (!heroId) {
+        toast.error("Hero ID is required");
+        return;
+      }
+      await WebsiteContentService.deleteHero(heroId);
+      toast.success("Hero deleted successfully");
+      loadHeroes(); // Reload (will be empty array after delete)
+    } catch (error) {
+      console.error("Failed to delete hero:", error);
+      toast.error(error.response?.data?.message || "Failed to delete hero");
+    }
+  };
 
   const handleToggleHeroStatus = async (item) => {
     try {
@@ -716,6 +750,81 @@ const handleDeleteHero = async (item) => {
     }
   };
 
+  // Feature Section Handlers
+  const handleAddFeatureMeta = async (data) => {
+    try {
+      await WebsiteContentService.addFeatureMeta(data);
+      toast.success("Feature meta added successfully");
+      loadFeatureSection();
+    } catch (error) {
+      console.error("Failed to add feature meta:", error);
+      toast.error("Failed to add feature meta");
+    }
+  };
+
+  const handleEditFeatureMeta = async (data) => {
+    try {
+      const metaId = data._id;
+      if (!metaId) { toast.error("Meta ID is required"); return; }
+      await WebsiteContentService.updateFeatureMeta(metaId, data);
+      toast.success("Feature meta updated successfully");
+      loadFeatureSection();
+    } catch (error) {
+      console.error("Failed to update feature meta:", error);
+      toast.error("Failed to update feature meta");
+    }
+  };
+
+  const handleDeleteFeatureMeta = async (item) => {
+    try {
+      const metaId = item._id;
+      if (!metaId) { toast.error("Meta ID is required"); return; }
+      await WebsiteContentService.deleteFeatureMeta(metaId);
+      toast.success("Feature meta deleted successfully");
+      loadFeatureSection();
+    } catch (error) {
+      console.error("Failed to delete feature meta:", error);
+      toast.error("Failed to delete feature meta");
+    }
+  };
+
+  const handleAddFeatureCard = async (data) => {
+    try {
+      await WebsiteContentService.addFeatureCard(data);
+      toast.success("Feature card added successfully");
+      loadFeatureSection();
+    } catch (error) {
+      console.error("Failed to add feature card:", error);
+      toast.error("Failed to add feature card");
+    }
+  };
+
+  const handleEditFeatureCard = async (data) => {
+    try {
+      const cardId = data._id;
+      if (!cardId) { toast.error("Card ID is required"); return; }
+      await WebsiteContentService.updateFeatureCard(cardId, data);
+      toast.success("Feature card updated successfully");
+      loadFeatureSection();
+    } catch (error) {
+      console.error("Failed to update feature card:", error);
+      toast.error("Failed to update feature card");
+    }
+  };
+
+  const handleDeleteFeatureCard = async (item) => {
+    try {
+      const cardId = item._id;
+      if (!cardId) { toast.error("Card ID is required"); return; }
+      await WebsiteContentService.deleteFeatureCard(cardId);
+      toast.success("Feature card deleted successfully");
+      loadFeatureSection();
+    } catch (error) {
+      console.error("Failed to delete feature card:", error);
+      toast.error("Failed to delete feature card");
+    }
+  };
+
   const handleToggleStatus = async (item) => {
     try {
       const newStatus = item.status === 'active' ? 'inactive' : 'active';
@@ -739,6 +848,7 @@ const handleDeleteHero = async (item) => {
     loadSuperadmin();
     loadIntegrations();
     loadHeroes();
+    loadFeatureSection();
   }, []);
 
   // Get stats for the active tab
@@ -752,6 +862,7 @@ const handleDeleteHero = async (item) => {
       superadmin: { count: superadmin.length, color: "bg-red-500", label: "Controls", singular: "Control" },
       integrations: { count: integrations.length, color: "bg-indigo-500", label: "Integrations", singular: "Integration" },
       heroes: { count: heroes.length, color: "bg-teal-500", label: "Heroes", singular: "Hero" },
+      featureSection: { count: featureMeta.length + featureCards.length, color: "bg-cyan-500", label: "Features", singular: "Feature" },
     };
     return stats[activeTab] || { count: 0, color: "bg-gray-500", label: "Items", singular: "Item" };
   };
@@ -868,6 +979,29 @@ const handleDeleteHero = async (item) => {
             ))}
           </div>
         );
+      case "featureSection":
+        return (
+          <div className="space-y-4">
+            {featureMeta.map((item) => (
+              <MobileFeatureSectionCard
+                key={item._id}
+                type="meta"
+                item={item}
+                onEdit={() => { setSelectedFeatureMeta(item); setEditFeatureMetaOpen(true); }}
+                onDelete={() => { setSelectedFeatureMeta(item); setDeleteFeatureMetaOpen(true); }}
+              />
+            ))}
+            {featureCards.map((item) => (
+              <MobileFeatureSectionCard
+                key={item._id}
+                type="card"
+                item={item}
+                onEdit={() => { setSelectedFeatureCard(item); setEditFeatureCardOpen(true); }}
+                onDelete={() => { setSelectedFeatureCard(item); setDeleteFeatureCardOpen(true); }}
+              />
+            ))}
+          </div>
+        );
       default:
         return null;
     }
@@ -942,6 +1076,24 @@ const handleDeleteHero = async (item) => {
             onToggleStatus={handleToggleHeroStatus}
           />
         );
+      case "featureSection":
+        return (
+          <div className="space-y-6">
+            <FeatureSectionTable
+              meta={featureMeta}
+              cards={featureCards}
+              onEditMeta={(item) => { setSelectedFeatureMeta(item); setEditFeatureMetaOpen(true); }}
+              onDeleteMeta={(item) => { setSelectedFeatureMeta(item); setDeleteFeatureMetaOpen(true); }}
+              onEditCard={(item) => { setSelectedFeatureCard(item); setEditFeatureCardOpen(true); }}
+              onDeleteCard={(item) => { setSelectedFeatureCard(item); setDeleteFeatureCardOpen(true); }}
+            />
+            {/* Live Preview */}
+            <div className="pt-4 border-t">
+              <h4 className="text-sm font-semibold text-muted-foreground mb-3">Live Preview</h4>
+              <FeatureSectionPreview meta={featureMeta[0]} cards={featureCards} />
+            </div>
+          </div>
+        );
       default:
         return null;
     }
@@ -956,8 +1108,9 @@ const handleDeleteHero = async (item) => {
       case "modernTeams": return "Add Feature";
       case "superadmin": return "Add Control";
       case "integrations": return "Add Integration";
-      default: return "Add Item";
       case "heroes": return "Add Hero";
+      case "featureSection": return "Add";
+      default: return "Add Item";
     }
   };
 
@@ -1099,6 +1252,16 @@ const handleDeleteHero = async (item) => {
                         <span className="sm:hidden">Hero</span>
                       </span>
                     </TabsTrigger>
+                    <TabsTrigger
+                      value="featureSection"
+                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
+                    >
+                      <span className="flex items-center gap-1.5 whitespace-nowrap">
+                        <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
+                        <span className="hidden sm:inline">Features Section</span>
+                        <span className="sm:hidden">Features</span>
+                      </span>
+                    </TabsTrigger>
                   </div>
                 </TabsList>
               </ScrollArea>
@@ -1116,6 +1279,7 @@ const handleDeleteHero = async (item) => {
                       {activeTab === "superadmin" && "Superadmin Controls"}
                       {activeTab === "integrations" && "Integrations"}
                       {activeTab === "heroes" && "Hero Sections"}
+                      {activeTab === "featureSection" && "Features Section"}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1">
                       {activeTab === "steps" && "Manage the step-by-step guide for your users"}
@@ -1126,6 +1290,7 @@ const handleDeleteHero = async (item) => {
                       {activeTab === "superadmin" && "Manage administrative features and settings"}
                       {activeTab === "integrations" && "Manage third-party integrations and connections"}
                       {activeTab === "heroes" && "Manage hero sections and rotating text animations"}
+                      {activeTab === "featureSection" && "Manage feature section meta and feature cards"}
                     </p>
                   </div>
                   <Button
@@ -1139,6 +1304,7 @@ const handleDeleteHero = async (item) => {
                         case "superadmin": setAddSuperOpen(true); break;
                         case "integrations": setAddIntegrationOpen(true); break;
                         case "heroes": setAddHeroOpen(true); break;
+                        case "featureSection": setAddFeatureMetaOpen(true); break;
                       }
                     }}
                     className="gap-2 w-full sm:w-auto"
@@ -1147,6 +1313,16 @@ const handleDeleteHero = async (item) => {
                     <PlusCircle className="h-4 w-4" />
                     {getAddButtonLabel()}
                   </Button>
+                  {activeTab === "featureSection" && (
+                    <Button
+                      onClick={() => setAddFeatureCardOpen(true)}
+                      variant="outline"
+                      className="gap-2 w-full sm:w-auto"
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                      Add Card
+                    </Button>
+                  )}
                 </div>
 
                 {/* Empty State */}
@@ -1156,7 +1332,8 @@ const handleDeleteHero = async (item) => {
                   (activeTab === "blogs" && blogs.length === 0) ||
                   (activeTab === "modernTeams" && modernTeams.length === 0) ||
                   (activeTab === "superadmin" && superadmin.length === 0) ||
-                  (activeTab === "integrations" && integrations.length === 0) ? (
+                  (activeTab === "integrations" && integrations.length === 0) ||
+                  (activeTab === "featureSection" && featureMeta.length === 0 && featureCards.length === 0) ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">
                       <PlusCircle className="h-8 w-8 text-muted-foreground" />
@@ -1175,6 +1352,7 @@ const handleDeleteHero = async (item) => {
                           case "modernTeams": setAddModernOpen(true); break;
                           case "superadmin": setAddSuperOpen(true); break;
                           case "integrations": setAddIntegrationOpen(true); break;
+                          case "featureSection": setAddFeatureMetaOpen(true); break;
                         }
                       }}
                       className="gap-2"
@@ -1259,6 +1437,15 @@ const handleDeleteHero = async (item) => {
         onClose={() => setDeleteHeroOpen(false)}
         onSubmit={handleDeleteHero}
       />
+
+      {/* Feature Section Dialogs */}
+      <FeatureMetaAddDialog open={addFeatureMetaOpen} onClose={() => setAddFeatureMetaOpen(false)} onSubmit={handleAddFeatureMeta} />
+      <FeatureMetaEditDialog open={editFeatureMetaOpen} item={selectedFeatureMeta} onClose={() => setEditFeatureMetaOpen(false)} onSubmit={handleEditFeatureMeta} />
+      <FeatureMetaDeleteDialog open={deleteFeatureMetaOpen} item={selectedFeatureMeta} onClose={() => setDeleteFeatureMetaOpen(false)} onSubmit={handleDeleteFeatureMeta} />
+
+      <FeatureCardAddDialog open={addFeatureCardOpen} onClose={() => setAddFeatureCardOpen(false)} onSubmit={handleAddFeatureCard} />
+      <FeatureCardEditDialog open={editFeatureCardOpen} item={selectedFeatureCard} onClose={() => setEditFeatureCardOpen(false)} onSubmit={handleEditFeatureCard} />
+      <FeatureCardDeleteDialog open={deleteFeatureCardOpen} item={selectedFeatureCard} onClose={() => setDeleteFeatureCardOpen(false)} onSubmit={handleDeleteFeatureCard} />
     </div>
   );
 }

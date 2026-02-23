@@ -9,14 +9,14 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Pencil, 
-  Trash2, 
-  Users, 
-  Brain, 
-  Zap, 
-  Shield, 
-  Cloud, 
+import {
+  Pencil,
+  Trash2,
+  Users,
+  Brain,
+  Zap,
+  Shield,
+  Cloud,
   Clock,
   Mail,
   Layout,
@@ -66,13 +66,13 @@ export function ModernTeamTable({ items, onEdit, onDelete }) {
 
   // Function to get feature category based on title
   const getFeatureCategory = (title) => {
-    if (title?.toLowerCase().includes('ai') || title?.toLowerCase().includes('automation')) 
+    if (title?.toLowerCase().includes('ai') || title?.toLowerCase().includes('automation'))
       return 'AI & Automation';
-    if (title?.toLowerCase().includes('security') || title?.toLowerCase().includes('secure')) 
+    if (title?.toLowerCase().includes('security') || title?.toLowerCase().includes('secure'))
       return 'Security';
-    if (title?.toLowerCase().includes('collaboration') || title?.toLowerCase().includes('team')) 
+    if (title?.toLowerCase().includes('collaboration') || title?.toLowerCase().includes('team'))
       return 'Collaboration';
-    if (title?.toLowerCase().includes('cloud') || title?.toLowerCase().includes('sync')) 
+    if (title?.toLowerCase().includes('cloud') || title?.toLowerCase().includes('sync'))
       return 'Cloud';
     return 'Productivity';
   };
@@ -93,15 +93,15 @@ export function ModernTeamTable({ items, onEdit, onDelete }) {
             const IconComponent = getIconComponent(item.icon);
             const iconColor = getIconColor(item.icon);
             const category = getFeatureCategory(item.title);
-            
+
             return (
-              <TableRow  key={item._id || item.id || `${item.title}-${item._id || item.id}`} className="group hover:bg-muted/20 transition-all duration-200">
+              <TableRow key={item._id || item.id || `${item.title}-${item._id || item.id}`} className="group hover:bg-muted/20 transition-all duration-200">
                 <TableCell>
                   <div className={`w-12 h-12 rounded-xl ${iconColor} flex items-center justify-center shadow-sm`}>
                     <IconComponent className="h-6 w-6" />
                   </div>
                 </TableCell>
-                
+
                 <TableCell>
                   <div className="space-y-2">
                     <div className="font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -117,13 +117,13 @@ export function ModernTeamTable({ items, onEdit, onDelete }) {
                     </div>
                   </div>
                 </TableCell>
-                
+
                 <TableCell>
                   <Badge variant="outline" className="font-medium">
                     {category}
                   </Badge>
                 </TableCell>
-                
+
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-2">
                     <Button
@@ -135,7 +135,7 @@ export function ModernTeamTable({ items, onEdit, onDelete }) {
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -152,7 +152,7 @@ export function ModernTeamTable({ items, onEdit, onDelete }) {
           })}
         </TableBody>
       </Table>
-      
+
       {items?.length === 0 && (
         <div className="text-center py-12">
           <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-4">

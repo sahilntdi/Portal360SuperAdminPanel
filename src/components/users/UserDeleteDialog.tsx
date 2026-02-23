@@ -22,13 +22,7 @@ export function UserDeleteDialog({ open, onClose, onDelete, user }: UserDeleteDi
     setLoading(true);
     try {
       await onDelete(user._id);
-      
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
-      });
-      
-      onClose();
+      // Parent handler closes dialog and shows toast after table refresh
     } catch (error: any) {
       toast({
         title: "Error",
@@ -54,7 +48,7 @@ export function UserDeleteDialog({ open, onClose, onDelete, user }: UserDeleteDi
             Are you sure you want to delete this user? This action cannot be undone.
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="text-center p-4 bg-muted rounded-lg">
           <h4 className="font-semibold">{user.firstName} {user.lastName}</h4>
           <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
@@ -62,7 +56,7 @@ export function UserDeleteDialog({ open, onClose, onDelete, user }: UserDeleteDi
             Created: {new Date(user.createdAt).toLocaleDateString()}
           </p>
         </div>
-        
+
         <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-6">
           <Button
             variant="outline"

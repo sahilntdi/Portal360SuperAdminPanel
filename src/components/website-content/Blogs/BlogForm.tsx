@@ -2,7 +2,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { X } from "lucide-react";
+
+const BLOG_CATEGORIES = [
+  { value: "technology", label: "Technology" },
+  { value: "design", label: "Design" },
+  { value: "marketing", label: "Marketing" },
+  { value: "business", label: "Business" },
+];
 
 export function BlogForm({ formData, setFormData, preview, setPreview }) {
   const handleChange = (field, value) =>
@@ -80,10 +94,21 @@ export function BlogForm({ formData, setFormData, preview, setPreview }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>Category <span className="text-red-600 font-bold">*</span></Label>
-          <Input
-            value={formData.category}
-            onChange={(e) => handleChange("category", e.target.value)}
-          />
+          <Select
+            value={formData.category?.toLowerCase() || ""}
+            onValueChange={(val) => handleChange("category", val)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select category" />
+            </SelectTrigger>
+            <SelectContent>
+              {BLOG_CATEGORIES.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
+                  {cat.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>

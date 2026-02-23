@@ -1,5 +1,5 @@
 // src/pages/Users.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -19,25 +19,25 @@ export default function UsersPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [orgLoading, setOrgLoading] = useState(true);
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalUsers, setTotalUsers] = useState(0);
   const [pageSize] = useState(10); // You can make this configurable if needed
-  
+
   // Dialog states
   const [addOpen, setAddOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [deleteUser, setDeleteUser] = useState<User | null>(null);
-  
+
   // Filter states
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
 
   // Fetch users with pagination
-  const fetchUsers = async (page: number = currentPage) => {
+  const fetchUsers = useCallback(async (page: number = currentPage) => {
     try {
       setLoading(true);
       const response = await UserService.getUsers(page, pageSize);
@@ -54,7 +54,7 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, pageSize, toast]);
 
   const fetchOrganizations = async () => {
     try {
@@ -76,64 +76,44 @@ export default function UsersPage() {
 
   // Handle actions
   const handleCreateUser = async (data: any) => {
-    try {
-      await UserService.createUser(data);
-      await fetchUsers(1); // Go back to first page after create
-      toast({
-        title: "Success",
-        description: "User created successfully",
-      });
-      return true;
-    } catch (error: any) {
-      throw new Error(error.message || "Failed to create user");
-    }
+    await UserService.createUser(data);
+    await fetchUsers(1); // Go back to first page after create
+    setAddOpen(false); // Close dialog after table is refreshed
+    toast({
+      title: "Success",
+      description: "User created successfully",
+    });
   };
 
   const handleUpdateUser = async (id: string, data: any) => {
-    try {
-      await UserService.updateUser(id, data);
-      await fetchUsers(currentPage);
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-      });
-      return true;
-    } catch (error: any) {
-      throw new Error(error.message || "Failed to update user");
-    }
+    await UserService.updateUser(id, data);
+    await fetchUsers(currentPage);
+    setEditUser(null); // Close dialog after table is refreshed
+    toast({
+      title: "Success",
+      description: "User updated successfully",
+    });
   };
 
   const handleDeleteUser = async (id: string) => {
-    try {
-      await UserService.deleteUser(id);
-      // If current page becomes empty after deletion, go to previous page
-      if (users.length === 1 && currentPage > 1) {
-        await fetchUsers(currentPage - 1);
-      } else {
-        await fetchUsers(currentPage);
-      }
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
-      });
-      return true;
-    } catch (error: any) {
-      throw new Error(error.message || "Failed to delete user");
-    }
+    await UserService.deleteUser(id);
+    // If current page becomes empty after deletion, go to previous page
+    const targetPage = (users.length === 1 && currentPage > 1) ? currentPage - 1 : currentPage;
+    await fetchUsers(targetPage);
+    setDeleteUser(null); // Close dialog after table is refreshed
+    toast({
+      title: "Success",
+      description: "User deleted successfully",
+    });
   };
 
   const handleToggleStatus = async (id: string, status: boolean) => {
-    try {
-      await UserService.toggleUserStatus(id, status);
-      await fetchUsers(currentPage);
-      toast({
-        title: "Success",
-        description: `User ${status ? 'deactivated' : 'activated'} successfully`,
-      });
-      return true;
-    } catch (error: any) {
-      throw new Error(error.message || "Failed to update status");
-    }
+    await UserService.toggleUserStatus(id, status);
+    await fetchUsers(currentPage);
+    toast({
+      title: "Success",
+      description: `User ${status ? 'deactivated' : 'activated'} successfully`,
+    });
   };
 
   // Load data on mount
@@ -147,13 +127,13 @@ export default function UsersPage() {
     const searchMatch = `${user.firstName} ${user.lastName} ${user.email}`
       .toLowerCase()
       .includes(search.toLowerCase());
-    
-    const statusMatch = statusFilter === "all" || 
+
+    const statusMatch = statusFilter === "all" ||
       (statusFilter === "active" && user.isActive) ||
       (statusFilter === "inactive" && !user.isActive);
-    
+
     const roleMatch = roleFilter === "all" || user.role?._id === roleFilter;
-    
+
     return searchMatch && statusMatch && roleMatch;
   });
 
@@ -292,7 +272,7 @@ export default function UsersPage() {
             onStatusToggle={handleToggleStatus}
             organizations={organizations}
           />
-          
+
           {/* Pagination */}
           {!loading && totalPages > 1 && (
             <div className="mt-4">
@@ -314,7 +294,7 @@ export default function UsersPage() {
         organizations={organizations}
         orgLoading={orgLoading}
       />
-      
+
       <UserEditDialog
         open={!!editUser}
         onClose={() => setEditUser(null)}
@@ -322,7 +302,7 @@ export default function UsersPage() {
         user={editUser}
         organizations={organizations}
       />
-      
+
       <UserDeleteDialog
         open={!!deleteUser}
         onClose={() => setDeleteUser(null)}
