@@ -67,6 +67,17 @@ export const WebsiteContentService = {
 
 
 
+  /* -------------------- FEATURES SECTION -------------------- */
+  getFeatureSection: () => instance.get("features-section"),
+  addFeatureMeta: (payload) => instance.post("features-section/meta", payload),
+  updateFeatureMeta: (id, payload) =>
+    instance.patch(`features-section/meta/${id}`, payload),
+  deleteFeatureMeta: (id) => instance.delete(`features-section/meta/${id}`),
+  addFeatureCard: (payload) => instance.post("features-section/card", payload),
+  updateFeatureCard: (id, payload) =>
+    instance.patch(`features-section/card/${id}`, payload),
+  deleteFeatureCard: (id) => instance.delete(`features-section/card/${id}`),
+
   /* -------------------- BLOGS -------------------- */
   getBlogs: () => instance.get("blogs"),
 
