@@ -41,7 +41,7 @@ export function UserEditDialog({ open, onClose, onUpdate, user }: UserEditDialog
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!user?._id) return;
 
     setLoading(true);
@@ -53,13 +53,7 @@ export function UserEditDialog({ open, onClose, onUpdate, user }: UserEditDialog
         role: form.role,
         isActive: form.isActive,
       });
-      
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-      });
-      
-      onClose();
+      // Parent handler closes dialog and shows toast after table refresh
     } catch (error: any) {
       toast({
         title: "Error",
@@ -79,7 +73,7 @@ export function UserEditDialog({ open, onClose, onUpdate, user }: UserEditDialog
         <DialogHeader>
           <DialogTitle>Edit User: {user.firstName} {user.lastName}</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -92,7 +86,7 @@ export function UserEditDialog({ open, onClose, onUpdate, user }: UserEditDialog
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="lastName">Last Name</Label>
               <Input
@@ -117,7 +111,7 @@ export function UserEditDialog({ open, onClose, onUpdate, user }: UserEditDialog
             />
           </div>
 
-         
+
 
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>

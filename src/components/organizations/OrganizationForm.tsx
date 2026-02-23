@@ -287,9 +287,11 @@ export function OrganizationForm({
   );
 
   const validateStep = async (stepNumber: number): Promise<boolean> => {
-    const fieldsToValidate: { [key: number]: (keyof OrganizationFormValues)[] } = {
+    const fieldsToValidate: Record<number, (keyof OrganizationFormValues)[]> = {
       1: ['email'],
-      2: ['firstName', 'lastName', ...(showPasswordField ? ['password'] : [])],
+      2: showPasswordField
+        ? ['firstName', 'lastName', 'password']
+        : ['firstName', 'lastName'],
       3: ['businessName'],
       4: ['practiceName'],
       5: ['nature'],
@@ -298,7 +300,7 @@ export function OrganizationForm({
     };
 
     const fields = fieldsToValidate[stepNumber];
-    if (!fields) return true; // Safety check
+    if (!fields) return true;
 
     const result = await form.trigger(fields as any);
 
@@ -310,7 +312,6 @@ export function OrganizationForm({
     });
 
     setStepErrors(prev => ({ ...prev, [stepNumber]: errors }));
-
     return result;
   };
 

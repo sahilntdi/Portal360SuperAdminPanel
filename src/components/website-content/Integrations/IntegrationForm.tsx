@@ -4,10 +4,28 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Upload, X, Link, AlertCircle } from "lucide-react";
 
-export function IntegrationForm({ formData, setFormData, isEdit = false }) {
+// Validation helper for use in Add/Edit dialogs
+export function validateIntegrationForm(
+  data: { name?: string; order?: number; logoFile?: any; logoUrl?: string; logo?: string },
+  isEdit = false
+) {
+  const errs: Record<string, string> = {};
+  if (!data.name?.trim()) errs.name = "Name is required";
+  if (!data.order || data.order < 1) errs.order = "Order must be at least 1";
+
+  const hasLogo = data.logoFile || data.logoUrl?.trim() || (isEdit && data.logo);
+  if (!hasLogo) errs.logo = "Please upload a logo or provide a URL";
+
+  return errs;
+}
+
+export function IntegrationForm({ formData, setFormData, isEdit = false, externalErrors = {} as Record<string, string> }) {
   const [logoPreview, setLogoPreview] = useState("");
   const [useUrl, setUseUrl] = useState(false);
-  const [errors, setErrors] = useState({});
+  const [internalErrors, setInternalErrors] = useState<Record<string, string>>({});
+
+  // Merge internal file-validation errors with external dialog-level errors
+  const errors: Record<string, string> = { ...externalErrors, ...internalErrors };
 
   // 🟣 Prefill logic when editing
   useEffect(() => {
@@ -25,7 +43,7 @@ export function IntegrationForm({ formData, setFormData, isEdit = false }) {
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
+    if (errors[field]) setInternalErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   // 🟣 Handle Logo File
@@ -35,12 +53,12 @@ export function IntegrationForm({ formData, setFormData, isEdit = false }) {
 
     // Validate file
     if (file.size > 2 * 1024 * 1024) {
-      return setErrors({ logo: "Max file size allowed is 2MB" });
+      return setInternalErrors({ logo: "Max file size allowed is 2MB" });
     }
 
     const allowed = ["image/png", "image/jpeg", "image/svg+xml", "image/webp"];
     if (!allowed.includes(file.type)) {
-      return setErrors({ logo: "Only PNG, JPG, SVG, WEBP are allowed" });
+      return setInternalErrors({ logo: "Only PNG, JPG, SVG, WEBP are allowed" });
     }
 
     // Set file
@@ -68,7 +86,7 @@ export function IntegrationForm({ formData, setFormData, isEdit = false }) {
 
   return (
     <div className="space-y-6">
-      
+
       {/* Name */}
       <div>
         <Label>Name *</Label>
@@ -119,6 +137,11 @@ export function IntegrationForm({ formData, setFormData, isEdit = false }) {
           <Link className="h-4 w-4 mr-1" /> Use URL
         </Button>
       </div>
+      {errors.logo && !logoPreview && (
+        <p className="text-xs text-red-500 flex gap-1 mt-1">
+          <AlertCircle className="h-3 w-3" /> {errors.logo}
+        </p>
+      )}
 
       {/* Upload */}
       {!useUrl && (
