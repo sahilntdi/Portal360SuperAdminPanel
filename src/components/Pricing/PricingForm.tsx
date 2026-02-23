@@ -115,10 +115,18 @@ export default function PricingForm({ defaultValue = {}, onSubmit, onCancel, loa
   }, []);
 
   const fetchFeatures = async () => {
-    const res = await getFeatures();
-    const list = res?.data || [];
-    setFeatureList(list);
-    setFilteredFeatures(list);
+    try {
+      const res = await getFeatures();
+      const list = res?.data || [];
+
+      // ✅ Only active features
+      const activeFeatures = list.filter((feature: any) => feature.isActive === true);
+
+      setFeatureList(activeFeatures);
+      setFilteredFeatures(activeFeatures);
+    } catch (error) {
+      console.error("Failed to fetch features:", error);
+    }
   };
 
   // Map features when editing

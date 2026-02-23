@@ -234,9 +234,6 @@ export function OrganizationTable({
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => window.open(`mailto:${org.email}`)}>
-                      Send Email
-                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onEdit(org)}>
                       <Edit2 className="h-4 w-4 mr-2" />

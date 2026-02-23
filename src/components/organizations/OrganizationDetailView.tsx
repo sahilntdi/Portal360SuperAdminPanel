@@ -298,20 +298,7 @@ const OrganizationDetailView = () => {
             )}
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => window.open(`mailto:${organization.email}`)}>
-                <Mail className="h-4 w-4 mr-2" />
-                Send Email
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </DropdownMenuContent>
-          </DropdownMenu>
+
         </div>
       </div>
 
