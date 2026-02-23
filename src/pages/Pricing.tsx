@@ -46,19 +46,19 @@ export default function Pricing() {
     } finally {
       setLoading(false);
     }
-   
+
   };
-const filteredData = React.useMemo(() => {
-  if (activeTab === "active") {
-    return stats.data.filter((p) => p.isActive);
-  }
+  const filteredData = React.useMemo(() => {
+    if (activeTab === "active") {
+      return stats.data.filter((p) => p.isActive);
+    }
 
-  if (activeTab === "featured") {
-    return stats.data.filter((p) => p.highlighted);
-  }
+    if (activeTab === "featured") {
+      return stats.data.filter((p) => p.highlighted);
+    }
 
-  return stats.data; // all
-}, [activeTab, stats.data]);
+    return stats.data; // all
+  }, [activeTab, stats.data]);
 
   useEffect(() => {
     fetchData();
@@ -178,21 +178,21 @@ const filteredData = React.useMemo(() => {
         onClose={() => setAddOpen(false)}
         onSuccess={fetchData}
       />
-      
+
       <PricingEditDialog
         open={!!editItem}
         item={editItem}
         onClose={() => setEditItem(null)}
         onSuccess={fetchData}
       />
-      
+
       <PricingDeleteDialog
         open={!!deleteItem}
         item={deleteItem}
         onClose={() => setDeleteItem(null)}
         onSuccess={fetchData}
       />
-      
+
       <PricingDetailDialog
         open={!!detailItem}
         item={detailItem}
