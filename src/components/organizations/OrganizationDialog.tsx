@@ -46,7 +46,7 @@ export function OrganizationDialog({
             {isEditMode ? "Edit Organisation" : "Create New Organisation"}
           </DialogTitle>
           <DialogDescription>
-            {isEditMode 
+            {isEditMode
               ? "Update Organisation details and settings"
               : "Add a new Organisation to the platform"
             }

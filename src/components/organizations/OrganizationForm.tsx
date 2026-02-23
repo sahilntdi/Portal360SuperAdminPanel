@@ -91,7 +91,7 @@ const organizationSchema = z.object({
   structure: z.object({
     partners: z.string()
       .min(1, "Please select number of partners")
-      .refine(val => val === "Other" || BRACKETS.includes(val), {
+      .refine(val => val === "Other" || PARTNER_BRACKETS.includes(val), {
         message: "Invalid selection for partners"
       }),
     partnersOther: z.string()
@@ -101,7 +101,7 @@ const organizationSchema = z.object({
       }),
     admin: z.string()
       .min(1, "Please select number of admin staff")
-      .refine(val => val === "Other" || BRACKETS.includes(val), {
+      .refine(val => val === "Other" || ADMIN_BRACKETS.includes(val), {
         message: "Invalid selection for admin staff"
       }),
     adminOther: z.string()
@@ -111,7 +111,7 @@ const organizationSchema = z.object({
       }),
     accountants: z.string()
       .min(1, "Please select number of accountants")
-      .refine(val => val === "Other" || BRACKETS.includes(val), {
+      .refine(val => val === "Other" || ACCOUNTANT_BRACKETS.includes(val), {
         message: "Invalid selection for accountants"
       }),
     accountantsOther: z.string()
@@ -121,7 +121,7 @@ const organizationSchema = z.object({
       }),
     clients: z.string()
       .min(1, "Please select number of clients")
-      .refine(val => val === "Other" || BRACKETS.includes(val), {
+      .refine(val => val === "Other" || CLIENT_BRACKETS.includes(val), {
         message: "Invalid selection for clients"
       }),
     clientsOther: z.string()
@@ -160,10 +160,7 @@ const organizationSchema = z.object({
   }),
 
   clientsRange: z.string()
-    .optional()
-    .refine(val => !val || (parseInt(val) >= 0 && parseInt(val) <= 10000), {
-      message: "Clients range must be between 0 and 10,000"
-    }),
+    .optional(),
 }).superRefine((data, ctx) => {
   // Cross-field validation
   if (data.paymentOption === "alreadyPaid" && data.plan === "") {
@@ -182,17 +179,15 @@ type OrganizationFormValues = z.infer<typeof organizationSchema>;
 
 const NATURE_OPTIONS = [
   { id: "accounting", label: "Accounting", comingSoon: false },
-  { id: "tax", label: "Tax", comingSoon: true },
+  { id: "conveyancing", label: "Conveyancing", comingSoon: true },
   { id: "marketing", label: "Marketing", comingSoon: true },
-  { id: "consulting", label: "Consulting", comingSoon: true },
   { id: "legal", label: "Legal", comingSoon: true },
-  { id: "finance", label: "Finance", comingSoon: true },
-  { id: "it-services", label: "IT Services", comingSoon: true },
-  { id: "real-estate", label: "Real Estate", comingSoon: true },
-  { id: "healthcare", label: "Healthcare", comingSoon: true },
 ];
 
-const BRACKETS = ["None", "1-2", "3-5", "6-10", "Other"];
+const PARTNER_BRACKETS = ["None", "1-5", "6-11", "12-20", "21-30", "Other"];
+const ADMIN_BRACKETS = ["None", "1-5", "6-11", "12-20", "21-30", "Other"];
+const ACCOUNTANT_BRACKETS = ["None", "1-5", "6-11", "12-20", "21-30", "Other"];
+const CLIENT_BRACKETS = ["None", "1-10", "11-50", "51-100", "101-500", "Other"];
 
 interface OrganizationFormProps {
   initialData?: Organization | null;
@@ -233,7 +228,7 @@ function suggestBusinessNames(email = '', nature: string[] = []) {
   const words = base.split(' ');
   if (words.length > 1) suggestions.add(words.map((w) => w[0]).join('').toUpperCase() + ' Firm');
   suggestions.add(`${base} Firm`);
-  suggestions.add(`${base} Pvt Ltd`);
+  suggestions.add(`${base} Pty Ltd`);
   return Array.from(suggestions).slice(0, 5);
 }
 
@@ -262,16 +257,16 @@ export function OrganizationForm({
       password: "",
       businessName: initialData?.businessName || "",
       practiceName: initialData?.practiceName || "",
-      nature: initialData?.onboardingData?.nature || [],
-      structure: initialData?.onboardingData?.structure || {
-        partners: "",
-        partnersOther: "",
-        admin: "",
-        adminOther: "",
-        accountants: "",
-        accountantsOther: "",
-        clients: initialData?.onboardingData?.clientsRange || "",
-        clientsOther: "",
+      nature: initialData?.onboardingData?.nature?.map(n => n.toLowerCase()) || [],
+      structure: {
+        partners: initialData?.onboardingData?.structure?.partners || "",
+        partnersOther: initialData?.onboardingData?.structure?.partnersOther?.toString() || "",
+        admin: initialData?.onboardingData?.structure?.admin || "",
+        adminOther: initialData?.onboardingData?.structure?.adminOther?.toString() || "",
+        accountants: initialData?.onboardingData?.structure?.accountants || "",
+        accountantsOther: initialData?.onboardingData?.structure?.accountantsOther?.toString() || "",
+        clients: initialData?.onboardingData?.structure?.clients || "",
+        clientsOther: initialData?.onboardingData?.structure?.clientsOther?.toString() || "",
       },
       plan: initialData?.plan?._id || "",
       paymentOption: initialData?.isPaid ? "alreadyPaid" : "unpaid",
@@ -303,6 +298,8 @@ export function OrganizationForm({
     };
 
     const fields = fieldsToValidate[stepNumber];
+    if (!fields) return true; // Safety check
+
     const result = await form.trigger(fields as any);
 
     // Collect errors for this step
@@ -338,7 +335,15 @@ export function OrganizationForm({
     setStepErrors(prev => ({ ...prev, [step]: [] }));
   };
 
-  const NumberGroup = ({ title, field }: { title: string; field: keyof OrganizationFormValues['structure'] }) => {
+  const NumberGroup = ({
+    title,
+    field,
+    options
+  }: {
+    title: string;
+    field: keyof OrganizationFormValues['structure'];
+    options: string[];
+  }) => {
     const value = watchStructure[field];
     const error = form.formState.errors.structure?.[field];
     const otherField = `${field}Other` as keyof OrganizationFormValues['structure'];
@@ -355,8 +360,8 @@ export function OrganizationForm({
             </span>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-2">
-          {BRACKETS.map((b) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {options.map((b) => (
             <div key={b}>
               <button
                 type="button"
@@ -368,7 +373,7 @@ export function OrganizationForm({
                   }
                 }}
                 className={`w-full p-3 rounded-lg border text-center transition-all ${value === b
-                  ? "border-primary bg-primary/10 text-primary"
+                  ? "border-primary bg-primary/10 text-primary font-medium"
                   : "border-border hover:border-primary/50"
                   }`}
               >
@@ -400,22 +405,7 @@ export function OrganizationForm({
     );
   };
 
-  const handleSubmitForm = async (data: OrganizationFormValues) => {
-    const isValid = await form.trigger();
-    if (!isValid) return;
 
-    const submitData: CreateOrganizationData | UpdateOrganizationData = {
-      ...data,
-      ...(data.paymentOption === "alreadyPaid" && { alreadyPaid: true }),
-      ...(data.paymentOption === "unpaid" && { unpaid: true }),
-      paymentOption: undefined,
-      businessNameChoice: data.businessName,
-      practiceNameChoice: data.practiceName,
-      clientsRange: data.clientsRange || data.structure.clients,
-    };
-
-    await onSubmit(submitData);
-  };
 
 
   const canProceedToStep2 = form.watch("email") && !form.getFieldState("email").error;
@@ -430,19 +420,62 @@ export function OrganizationForm({
     form.watch("structure.accountants") &&
     form.watch("structure.clients") &&
     !form.getFieldState("structure").error;
-  const canSubmit = form.watch("plan") && form.watch("paymentOption") &&
-    !form.getFieldState("plan").error && !form.getFieldState("paymentOption").error;
-
   // Validation status for each step
-  const stepValidationStatus = {
+  const stepValidationStatus: { [key: number]: boolean } = {
     1: canProceedToStep2,
     2: canProceedToStep3,
     3: canProceedToStep4,
     4: canProceedToStep5,
     5: canProceedToStep6,
     6: canProceedToStep7,
-    7: canSubmit,
+    7: form.watch("plan") && form.watch("paymentOption") &&
+      !form.getFieldState("plan").error && !form.getFieldState("paymentOption").error,
   };
+
+  const finalStep = isEditMode ? 6 : 7;
+  const steps = Array.from({ length: finalStep }, (_, i) => i + 1);
+
+  const canSubmit = isEditMode
+    ? stepValidationStatus[6] // In edit mode, if step 6 is valid, we can submit
+    : stepValidationStatus[7]; // In create mode, step 7 must be valid
+
+  const handleSubmitForm = async (data: OrganizationFormValues) => {
+    try {
+      // Assuming `setLoading` is defined elsewhere, e.g., from a useState hook
+      // setLoading(true);
+
+      // Filter out plan data for edit mode
+      const submissionData = isEditMode
+        ? {
+          ...data,
+          plan: undefined,
+          paymentOption: undefined,
+          // Also remove other fields that are only relevant for initial setup
+          password: undefined, // Password is not updated via this form in edit mode
+          clientsRange: data.clientsRange || data.structure.clients, // Keep clientsRange logic
+          businessNameChoice: data.businessName,
+          practiceNameChoice: data.practiceName,
+          ...(data.paymentOption === "alreadyPaid" && { alreadyPaid: true }),
+          ...(data.paymentOption === "unpaid" && { unpaid: true }),
+        }
+        : {
+          ...data,
+          businessNameChoice: data.businessName,
+          practiceNameChoice: data.practiceName,
+          clientsRange: data.clientsRange || data.structure.clients,
+          ...(data.paymentOption === "alreadyPaid" && { alreadyPaid: true }),
+          ...(data.paymentOption === "unpaid" && { unpaid: true }),
+          paymentOption: undefined, // Remove paymentOption from the final payload
+        };
+
+      await onSubmit(submissionData);
+    } catch (error) {
+      console.error("Form submission error:", error);
+    } finally {
+      // setLoading(false);
+    }
+  };
+
 
   const renderStep = () => {
     switch (step) {
@@ -748,7 +781,7 @@ export function OrganizationForm({
                 <Building2 className="h-5 w-5" />
                 What is the nature of your business?
               </CardTitle>
-              <CardDescription>Select one or more (up to 5).</CardDescription>
+              <CardDescription>Select one.</CardDescription>
             </CardHeader>
             <CardContent data-error={!!form.formState.errors.nature}>
               <div className="grid grid-cols-2 gap-3">
@@ -837,10 +870,10 @@ export function OrganizationForm({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6" data-error={!!form.formState.errors.structure}>
-              <NumberGroup title="Partners" field="partners" />
-              <NumberGroup title="Admin Staff" field="admin" />
-              <NumberGroup title="Accountants" field="accountants" />
-              <NumberGroup title="How many clients do you manage?" field="clients" />
+              <NumberGroup title="Partners" field="partners" options={PARTNER_BRACKETS} />
+              <NumberGroup title="Admin Staff" field="admin" options={ADMIN_BRACKETS} />
+              <NumberGroup title="Accountants" field="accountants" options={ACCOUNTANT_BRACKETS} />
+              <NumberGroup title="How many clients do you manage?" field="clients" options={CLIENT_BRACKETS} />
 
               {stepErrors[6]?.length > 0 && (
                 <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
@@ -859,6 +892,9 @@ export function OrganizationForm({
         );
 
       case 7:
+        // Skip step 7 in edit mode if somehow reached
+        if (isEditMode) return null;
+
         return (
           <Card>
             <CardHeader>
@@ -877,54 +913,85 @@ export function OrganizationForm({
                   <p>Loading plans...</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {plans.map((p) => (
-                    <Card
-                      key={p._id}
-                      className={`cursor-pointer transition-all hover:shadow-lg ${form.watch("plan") === p._id
-                        ? 'border-primary ring-2 ring-primary/20'
-                        : 'border-border'
-                        }`}
-                      onClick={() => {
-                        form.setValue("plan", p._id);
-                        form.trigger("plan");
-                      }}
-                    >
-                      <CardHeader>
-                        <CardTitle className="text-lg">{p.name}</CardTitle>
-                        {p.highlighted && (
-                          <Badge className="w-fit bg-gradient-to-r from-blue-600 to-purple-600">
-                            MOST POPULAR
-                          </Badge>
-                        )}
-                      </CardHeader>
-                      <CardContent>
-                        <div className="mb-4">
-                          <div className="text-3xl font-bold">
-                            ${p.price}
-                            <span className="text-sm text-muted-foreground font-normal ml-1">
-                              /{p.period === 'monthly' ? 'month' : 'year'}
-                            </span>
-                          </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {plans.map((p) => {
+                    const isSelected = form.watch("plan") === p._id;
+                    const isCurrentPlan = initialData?.plan?._id === p._id;
+
+                    return (
+                      <div
+                        key={p._id}
+                        onClick={() => {
+                          form.setValue("plan", p._id);
+                          form.trigger("plan");
+                        }}
+                        className={`relative group cursor-pointer rounded-xl border-2 transition-all duration-300 overflow-hidden
+                          ${isSelected
+                            ? 'border-primary ring-4 ring-primary/10 bg-primary/5 shadow-xl scale-[1.02]'
+                            : 'border-border bg-card hover:border-primary/50 hover:shadow-lg'
+                          }
+                        `}
+                      >
+                        {/* Status Badges */}
+                        <div className="absolute top-0 right-0 p-3 flex flex-col items-end gap-2 z-10">
+                          {isCurrentPlan && (
+                            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 backdrop-blur-sm">
+                              Current Plan
+                            </Badge>
+                          )}
+                          {p.highlighted && !isCurrentPlan && (
+                            <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md">
+                              Popular
+                            </Badge>
+                          )}
                         </div>
-                        <ul className="space-y-2 text-sm">
-                          {Array.isArray(p.features) && p.features.slice(0, 4).map((feat, i) => {
-                            const text = typeof feat === 'string' ? feat : feat.name;
-                            const value = typeof feat === 'string' ? '' : feat.value;
-                            return (
-                              <li key={i} className="flex items-center gap-2">
-                                <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
-                                <span className="flex-1">{text}</span>
-                                {value && (
-                                  <span className="text-muted-foreground">{value}</span>
-                                )}
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </CardContent>
-                    </Card>
-                  ))}
+
+                        <div className="p-6">
+                          <div className="mb-4">
+                            <h3 className={`text-lg font-bold transition-colors ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                              {p.name}
+                            </h3>
+                            <div className="mt-2 flex items-baseline gap-1">
+                              <span className="text-3xl font-extrabold tracking-tight">
+                                ${p.price}
+                              </span>
+                              <span className="text-sm font-medium text-muted-foreground">
+                                /{p.period === 'monthly' ? 'mo' : 'yr'}
+                              </span>
+                            </div>
+                            {p.description && (
+                              <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                                {p.description}
+                              </p>
+                            )}
+                          </div>
+
+                          <Separator className="my-4 opacity-50" />
+
+                          <ul className="space-y-3">
+                            {Array.isArray(p.features) && p.features.slice(0, 5).map((feat, i) => {
+                              const text = typeof feat === 'string' ? feat : feat.name;
+                              const value = typeof feat === 'string' ? '' : feat.value;
+                              return (
+                                <li key={i} className="flex items-start gap-3 text-sm">
+                                  <div className={`mt-1 rounded-full p-0.5 ${isSelected ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                                    <Check className="h-3 w-3" />
+                                  </div>
+                                  <span className="text-muted-foreground font-medium">
+                                    {text} {value && <span className="text-foreground font-semibold ml-1">{value}</span>}
+                                  </span>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </div>
+
+                        {/* Selection Indicator */}
+                        <div className={`absolute bottom-0 left-0 right-0 h-1 transition-all duration-300 ${isSelected ? 'bg-primary' : 'bg-transparent'
+                          }`} />
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -1009,10 +1076,10 @@ export function OrganizationForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmitForm)} className="space-y-6">
+      <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
         {/* Progress Indicator with validation status */}
         <div className="flex items-center justify-between mb-6">
-          {[1, 2, 3, 4, 5, 6, 7].map((s) => (
+          {steps.map((s) => (
             <div key={s} className="flex items-center">
               <div className={`relative w-8 h-8 rounded-full flex items-center justify-center ${step === s ? 'bg-primary text-primary-foreground' :
                 step > s ? 'bg-green-500 text-white' :
@@ -1023,7 +1090,7 @@ export function OrganizationForm({
                   <span className="absolute -top-1 -right-1 w-3 h-3 bg-destructive rounded-full border-2 border-white"></span>
                 )}
               </div>
-              {s < 7 && (
+              {s < finalStep && (
                 <div className={`w-12 h-1 mx-2 ${step > s ? 'bg-green-500' : 'bg-muted'}`} />
               )}
             </div>
@@ -1046,7 +1113,7 @@ export function OrganizationForm({
             <div />
           )}
 
-          {step < 7 ? (
+          {step < finalStep ? (
             <Button
               type="button"
               onClick={handleNextStep}
@@ -1057,8 +1124,9 @@ export function OrganizationForm({
             </Button>
           ) : (
             <Button
-              type="submit"
-              disabled={!canSubmit || loading || !stepValidationStatus[7]}
+              type="button"
+              disabled={!canSubmit || loading || !stepValidationStatus[finalStep]}
+              onClick={form.handleSubmit(handleSubmitForm)}
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isEditMode ? "Update Organization" : "Create Organization"}

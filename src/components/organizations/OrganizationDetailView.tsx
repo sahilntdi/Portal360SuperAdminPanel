@@ -48,6 +48,7 @@ import { toast } from "sonner";
 import instance from "@/utils/axios";
 import { Organization } from "../../ApiService/apiOrganizations";
 import { useTenantUsers } from "@/hooks/useTenantUsers";
+import UpgradePlanDialog from "./UpgradePlanDialog";
 
 const OrganizationDetailView = () => {
   const params = useParams();
@@ -55,6 +56,7 @@ const OrganizationDetailView = () => {
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
 
   const location = window.location;
@@ -323,595 +325,613 @@ const OrganizationDetailView = () => {
           <TabsTrigger value="metrics">Metrics</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>
         </TabsList>
-      
 
-      {/* Overview Tab */}
-      <TabsContent value="overview" className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Info */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Organization Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Business Name</label>
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <span className="font-medium">{organization.businessName}</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => copyToClipboard(organization.businessName, "Business name")}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Practice Name</label>
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <span className="font-medium">{organization.practiceName || "Not set"}</span>
-                      {organization.practiceName && (
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Main Info */}
+            <div className="lg:col-span-2 space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Organization Details
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Business Name</label>
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <span className="font-medium">{organization.businessName}</span>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6"
-                          onClick={() => copyToClipboard(organization.practiceName!, "Practice name")}
+                          onClick={() => copyToClipboard(organization.businessName, "Business name")}
                         >
                           <Copy className="h-3 w-3" />
                         </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Database</label>
-                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Database className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-mono text-sm">{organization.dbName || "Default"}</span>
                       </div>
-                      <Badge variant="outline">Active</Badge>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Current Plan</label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center justify-between">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Practice Name</label>
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                        <span className="font-medium">{organization.practiceName || "Not set"}</span>
+                        {organization.practiceName && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => copyToClipboard(organization.practiceName!, "Practice name")}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Database</label>
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-2">
-                          <CreditCard className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium capitalize">{organization.planName || "Starter"}</span>
+                          <Database className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-mono text-sm">{organization.dbName || "Default"}</span>
                         </div>
-                        <Badge variant="default" className="capitalize">
-                          {organization.planName || "Starter"}
-                        </Badge>
+                        <Badge variant="outline">Active</Badge>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Current Plan</label>
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium capitalize">{organization.planName || "Starter"}</span>
+                          </div>
+                          <Badge variant="default" className="capitalize">
+                            {organization.planName || "Starter"}
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            {/* Admin Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  Admin Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <User className="h-8 w-8 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">
-                      {organization.firstName} {organization.lastName}
-                    </h3>
-                    <div className="flex items-center gap-3 mt-2">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Mail className="h-3 w-3" />
-                        {organization.email}
+              {/* Admin Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Admin Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-4 p-4 bg-muted/30 rounded-lg">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-8 w-8 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">
+                        {organization.firstName} {organization.lastName}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-2">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Mail className="h-3 w-3" />
+                          {organization.email}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => copyToClipboard(organization.email, "Email")}
+                        >
+                          <Copy className="h-3 w-3" />
+                        </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => copyToClipboard(organization.email, "Email")}
-                      >
-                        <Copy className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Metrics Summary */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="h-5 w-5" />
-                  Usage Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">Users</span>
-                      <span className="text-muted-foreground">
-                        {organization.metrics?.totalUsers || 0} active
-                      </span>
-                    </div>
-                    <Progress value={Math.min((organization.metrics?.totalUsers || 0) * 10, 100)} className="h-2" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">Clients</span>
-                      <span className="text-muted-foreground">
-                        {organization.metrics?.totalClients || 0} total
-                      </span>
-                    </div>
-                    <Progress value={Math.min((organization.metrics?.totalClients || 0) * 2, 100)} className="h-2" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">Storage</span>
-                      <span className="text-muted-foreground">
-                        {formatStorage(organization.metrics?.storageUsed || 0)}
-                      </span>
-                    </div>
-                    <Progress value={Math.min((organization.metrics?.storageUsed || 0) / 100, 100)} className="h-2" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium">API Calls (This Month)</span>
-                      <span className="text-muted-foreground">
-                        {organization.metrics?.apiCallsThisMonth || 0}
-                      </span>
-                    </div>
-                    <Progress value={Math.min((organization.metrics?.apiCallsThisMonth || 0) / 1000 * 100, 100)} className="h-2" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Important Dates */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Timeline
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Registered</label>
-                  <div className="text-sm font-medium">{formatDate(organization.registeredAt)}</div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Last Active</label>
-                  <div className="text-sm font-medium">{formatDate(organization.lastActive)}</div>
-                </div>
-                <Separator />
-                <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Created</label>
-                  <div className="text-sm font-medium">{formatDate(organization.createdAt)}</div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="user" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Tenant Users
-            </CardTitle>
-            <CardDescription>
-              All users associated with this organization
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-            {/* Loading */}
-            {usersLoading && (
-              <div className="space-y-3">
-                {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-10 w-full" />
-                ))}
-              </div>
-            )}
-
-            {/* Error */}
-            {usersError && (
-              <p className="text-sm text-destructive">{usersError}</p>
-            )}
-
-            {/* Empty */}
-            {!usersLoading && users.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                No users found for this organization.
-              </p>
-            )}
-
-            {/* Users List */}
-            {!usersLoading && users.length > 0 && (
-              <div className="space-y-3">
-                {users.map((user) => (
-                  <div
-                    key={user._id}
-                    className="flex items-center justify-between p-3 border rounded-lg"
-                  >
-                    <div>
-                      <p className="font-medium">{user.email}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Created: {new Date(user.createdAt).toLocaleDateString()}
-                      </p>
                     </div>
 
-                    <Badge variant={user.isActive ? "default" : "destructive"}>
-                      {user.isActive ? "Active" : "Inactive"}
-                    </Badge>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
+                </CardContent>
+              </Card>
+            </div>
 
-
-      {/* Subscription Tab */}
-      <TabsContent value="subscription" className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Subscription Details
-            </CardTitle>
-            <CardDescription>
-              Manage subscription, billing, and plan details
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {organization.subscription ? (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Status</label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      {getSubscriptionStatusBadge(organization.subscription.status)}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Billing Cycle</label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium capitalize">
-                          {organization.subscription.billingCycle || "Monthly"}
+            {/* Metrics Summary */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    Usage Summary
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">Users</span>
+                        <span className="text-muted-foreground">
+                          {organization.metrics?.totalUsers || 0} active
                         </span>
                       </div>
+                      <Progress value={Math.min((organization.metrics?.totalUsers || 0) * 10, 100)} className="h-2" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">Clients</span>
+                        <span className="text-muted-foreground">
+                          {organization.metrics?.totalClients || 0} total
+                        </span>
+                      </div>
+                      <Progress value={Math.min((organization.metrics?.totalClients || 0) * 2, 100)} className="h-2" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">Storage</span>
+                        <span className="text-muted-foreground">
+                          {formatStorage(organization.metrics?.storageUsed || 0)}
+                        </span>
+                      </div>
+                      <Progress value={Math.min((organization.metrics?.storageUsed || 0) / 100, 100)} className="h-2" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">API Calls (This Month)</span>
+                        <span className="text-muted-foreground">
+                          {organization.metrics?.apiCallsThisMonth || 0}
+                        </span>
+                      </div>
+                      <Progress value={Math.min((organization.metrics?.apiCallsThisMonth || 0) / 1000 * 100, 100)} className="h-2" />
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  {organization.subscription.nextBillingDate && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-muted-foreground">Next Billing</label>
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <div className="font-medium">
-                          {formatDate(organization.subscription.nextBillingDate)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+              {/* Important Dates */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Timeline
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Registered</label>
+                    <div className="text-sm font-medium">{formatDate(organization.registeredAt)}</div>
+                  </div>
+                  <Separator />
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Last Active</label>
+                    <div className="text-sm font-medium">{formatDate(organization.lastActive)}</div>
+                  </div>
+                  <Separator />
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Created</label>
+                    <div className="text-sm font-medium">{formatDate(organization.createdAt)}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
 
-                  {organization.subscription.trialEndsAt && (
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-muted-foreground">Trial Ends</label>
-                      <div className="p-3 bg-muted/50 rounded-lg">
-                        <div className="font-medium">
-                          {formatDate(organization.subscription.trialEndsAt)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+        <TabsContent value="user" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Tenant Users
+              </CardTitle>
+              <CardDescription>
+                All users associated with this organization
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              {/* Loading */}
+              {usersLoading && (
+                <div className="space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <Skeleton key={i} className="h-10 w-full" />
+                  ))}
                 </div>
+              )}
 
-                {organization.subscription.planSubs && (
-                  <div className="border rounded-lg p-6">
-                    <div className="flex items-center justify-between mb-6">
+              {/* Error */}
+              {usersError && (
+                <p className="text-sm text-destructive">{usersError}</p>
+              )}
+
+              {/* Empty */}
+              {!usersLoading && users.length === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  No users found for this organization.
+                </p>
+              )}
+
+              {/* Users List */}
+              {!usersLoading && users.length > 0 && (
+                <div className="space-y-3">
+                  {users.map((user) => (
+                    <div
+                      key={user._id}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
                       <div>
-                        <h3 className="text-lg font-semibold">{organization.subscription.planSubs.name}</h3>
-                        <p className="text-muted-foreground">{organization.subscription.planSubs.period}</p>
+                        <p className="font-medium">{user.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Created: {new Date(user.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold">
-                          ${organization.subscription.planSubs.price}
-                          <span className="text-sm text-muted-foreground font-normal">
-                            /{organization.subscription.billingCycle === 'yearly' ? 'year' : 'month'}
+
+                      <Badge variant={user.isActive ? "default" : "destructive"}>
+                        {user.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+
+        {/* Subscription Tab */}
+        <TabsContent value="subscription" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="space-y-1">
+                <CardTitle className="flex items-center gap-2 text-xl font-bold">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  Subscription Details
+                </CardTitle>
+                <CardDescription>
+                  Manage subscription, billing, and plan details
+                </CardDescription>
+              </div>
+              {organization.subscription && (
+                <Button
+                  onClick={() => setIsUpgradeModalOpen(true)}
+                  className="bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Upgrade Subscription
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {organization.subscription ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Status</label>
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        {getSubscriptionStatusBadge(organization.subscription.status)}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-muted-foreground">Billing Cycle</label>
+                      <div className="p-3 bg-muted/50 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium capitalize">
+                            {organization.subscription.billingCycle || "Monthly"}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    {organization.subscription.planSubs.features && (
-                      <div className="space-y-3">
-                        <h4 className="font-medium">Features included:</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {organization.subscription.planSubs.features.map((feature: any, idx: number) => (
-                            <div key={idx} className="flex items-center gap-2 text-sm">
-                              <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                              <span>{feature.name}: {JSON.stringify(feature.value)}</span>
-                            </div>
-                          ))}
+                    {organization.subscription.nextBillingDate && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground">Next Billing</label>
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                          <div className="font-medium">
+                            {formatDate(organization.subscription.nextBillingDate)}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {organization.subscription.trialEndsAt && (
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground">Trial Ends</label>
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                          <div className="font-medium">
+                            {formatDate(organization.subscription.trialEndsAt)}
+                          </div>
                         </div>
                       </div>
                     )}
                   </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-8">
-                <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Active Subscription</h3>
-                <p className="text-muted-foreground mb-4">
-                  This organization doesn't have an active subscription plan.
-                </p>
-                <Button>Assign a Plan</Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </TabsContent>
 
-      {/* Onboarding Tab */}
-      <TabsContent value="onboarding" className="space-y-6">
-        {organization.onboardingData ? (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Onboarding Information
-              </CardTitle>
-              <CardDescription>
-                Setup and configuration details provided during onboarding
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                      Clients Range
-                    </label>
-                    <div className="p-3 bg-muted/50 rounded-lg">
-                      <span className="font-medium">
-                        {organization.onboardingData.clientsRange || "Not specified"}
-                      </span>
+                  {organization.subscription.planSubs && (
+                    <div className="border rounded-lg p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <h3 className="text-lg font-semibold">{organization.subscription.planSubs.name}</h3>
+                          <p className="text-muted-foreground">{organization.subscription.planSubs.period}</p>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-3xl font-bold">
+                            ${organization.subscription.planSubs.price}
+                            <span className="text-sm text-muted-foreground font-normal">
+                              /{organization.subscription.billingCycle === 'yearly' ? 'year' : 'month'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {organization.subscription.planSubs.features && (
+                        <div className="space-y-3">
+                          <h4 className="font-medium">Features included:</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            {organization.subscription.planSubs.features.map((feature: any, idx: number) => (
+                              <div key={idx} className="flex items-center gap-2 text-sm">
+                                <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                                <span>{feature.name}: {JSON.stringify(feature.value)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <CreditCard className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Active Subscription</h3>
+                  <p className="text-muted-foreground mb-4">
+                    This organization doesn't have an active subscription plan.
+                  </p>
+                  <Button onClick={() => setIsUpgradeModalOpen(true)}>Assign a Plan</Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                  <div>
-                    <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                      Connected Email
-                    </label>
-
-                    <div className="p-3 bg-muted/50 rounded-lg flex items-center justify-between">
-                      <span className="font-medium">
-                        {organization.onboardingData.connectedEmail &&
-                          organization.onboardingData.connectedEmail !== "skip"
-                          ? organization.onboardingData.connectedEmail
-                          : "Not connected"}
-                      </span>
-                    </div>
-                  </div>
-
-
-                  {organization.onboardingData.completedAt && (
+        {/* Onboarding Tab */}
+        <TabsContent value="onboarding" className="space-y-6">
+          {organization.onboardingData ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Onboarding Information
+                </CardTitle>
+                <CardDescription>
+                  Setup and configuration details provided during onboarding
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
                     <div>
                       <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Onboarding Completed
+                        Clients Range
                       </label>
                       <div className="p-3 bg-muted/50 rounded-lg">
                         <span className="font-medium">
-                          {organization.onboardingData.completedAt
-                            ? formatDate(organization.onboardingData.completedAt)
-                            : "00"}
+                          {organization.onboardingData.clientsRange || "Not specified"}
                         </span>
                       </div>
                     </div>
-                  )}
-                </div>
 
-                <div className="space-y-4">
-                  {organization.onboardingData.nature &&
-                    organization.onboardingData.nature.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {organization.onboardingData.nature.map((nat, idx) => (
-                        <Badge key={idx} variant="secondary">
-                          {nat}
-                        </Badge>
-                      ))}
+                    <div>
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                        Connected Email
+                      </label>
+
+                      <div className="p-3 bg-muted/50 rounded-lg flex items-center justify-between">
+                        <span className="font-medium">
+                          {organization.onboardingData.connectedEmail &&
+                            organization.onboardingData.connectedEmail !== "skip"
+                            ? organization.onboardingData.connectedEmail
+                            : "Not connected"}
+                        </span>
+                      </div>
                     </div>
-                  ) : (
-                    <span className="font-medium">00</span>
-                  )}
 
 
-                  {organization.onboardingData.structure &&
-                    Object.keys(organization.onboardingData.structure).length > 0 ? (
-                    <div className="grid grid-cols-2 gap-3">
-                      {Object.entries(organization.onboardingData.structure).map(
-                        ([key, value]) => (
-                          <div key={key} className="space-y-1">
-                            <label className="text-xs text-muted-foreground capitalize">
-                              {key.replace(/([A-Z])/g, " $1").toLowerCase()}
-                            </label>
-                            <div className="p-2 bg-muted/50 rounded text-sm font-medium">
-                              {withZeroFallback(value)}
+                    {organization.onboardingData.completedAt && (
+                      <div>
+                        <label className="text-sm font-medium text-muted-foreground mb-2 block">
+                          Onboarding Completed
+                        </label>
+                        <div className="p-3 bg-muted/50 rounded-lg">
+                          <span className="font-medium">
+                            {organization.onboardingData.completedAt
+                              ? formatDate(organization.onboardingData.completedAt)
+                              : "00"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    {organization.onboardingData.nature &&
+                      organization.onboardingData.nature.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {organization.onboardingData.nature.map((nat, idx) => (
+                          <Badge key={idx} variant="secondary">
+                            {nat}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="font-medium">00</span>
+                    )}
+
+
+                    {organization.onboardingData.structure &&
+                      Object.keys(organization.onboardingData.structure).length > 0 ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        {Object.entries(organization.onboardingData.structure).map(
+                          ([key, value]) => (
+                            <div key={key} className="space-y-1">
+                              <label className="text-xs text-muted-foreground capitalize">
+                                {key.replace(/([A-Z])/g, " $1").toLowerCase()}
+                              </label>
+                              <div className="p-2 bg-muted/50 rounded text-sm font-medium">
+                                {withZeroFallback(value)}
+                              </div>
                             </div>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  ) : (
-                    <span className="font-medium">00</span>
-                  )}
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <span className="font-medium">00</span>
+                    )}
 
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="text-center py-12">
-            <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Onboarding Data</h3>
-            <p className="text-muted-foreground">
-              This organization hasn't completed the onboarding process yet.
-            </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="text-center py-12">
+              <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Onboarding Data</h3>
+              <p className="text-muted-foreground">
+                This organization hasn't completed the onboarding process yet.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Metrics Tab */}
+        <TabsContent value="metrics" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Users className="h-5 w-5 text-blue-500" />
+                    <Badge variant="outline" className="text-xs">+12%</Badge>
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {organization.metrics?.totalUsers || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Total Users</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Users className="h-5 w-5 text-green-500" />
+                    <Badge variant="outline" className="text-xs">+8%</Badge>
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {organization.metrics?.totalClients || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Total Clients</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Database className="h-5 w-5 text-amber-500" />
+                    <Badge variant="outline" className="text-xs">64%</Badge>
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {formatStorage(organization.metrics?.storageUsed || 0)}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Storage Used</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Activity className="h-5 w-5 text-purple-500" />
+                    <Badge variant="outline" className="text-xs">+23%</Badge>
+                  </div>
+                  <div className="text-2xl font-bold">
+                    {(organization.metrics?.apiCallsThisMonth || 0).toLocaleString()}
+                  </div>
+                  <p className="text-sm text-muted-foreground">API Calls This Month</p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
-      </TabsContent>
 
-      {/* Metrics Tab */}
-      <TabsContent value="metrics" className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Users className="h-5 w-5 text-blue-500" />
-                  <Badge variant="outline" className="text-xs">+12%</Badge>
+            <CardHeader>
+              <CardTitle>Usage Analytics</CardTitle>
+              <CardDescription>Monthly usage patterns and trends</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px] flex items-center justify-center border rounded-lg">
+                <div className="text-center">
+                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h4 className="font-semibold mb-2">Usage Analytics Coming Soon</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Detailed analytics and charts will be available soon.
+                  </p>
                 </div>
-                <div className="text-2xl font-bold">
-                  {organization.metrics?.totalUsers || 0}
-                </div>
-                <p className="text-sm text-muted-foreground">Total Users</p>
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
 
+        {/* Activity Tab */}
+        <TabsContent value="activity">
           <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Users className="h-5 w-5 text-green-500" />
-                  <Badge variant="outline" className="text-xs">+8%</Badge>
-                </div>
-                <div className="text-2xl font-bold">
-                  {organization.metrics?.totalClients || 0}
-                </div>
-                <p className="text-sm text-muted-foreground">Total Clients</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Database className="h-5 w-5 text-amber-500" />
-                  <Badge variant="outline" className="text-xs">64%</Badge>
-                </div>
-                <div className="text-2xl font-bold">
-                  {formatStorage(organization.metrics?.storageUsed || 0)}
-                </div>
-                <p className="text-sm text-muted-foreground">Storage Used</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Activity className="h-5 w-5 text-purple-500" />
-                  <Badge variant="outline" className="text-xs">+23%</Badge>
-                </div>
-                <div className="text-2xl font-bold">
-                  {(organization.metrics?.apiCallsThisMonth || 0).toLocaleString()}
-                </div>
-                <p className="text-sm text-muted-foreground">API Calls This Month</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Usage Analytics</CardTitle>
-            <CardDescription>Monthly usage patterns and trends</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px] flex items-center justify-center border rounded-lg">
-              <div className="text-center">
-                <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h4 className="font-semibold mb-2">Usage Analytics Coming Soon</h4>
-                <p className="text-sm text-muted-foreground">
-                  Detailed analytics and charts will be available soon.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* Activity Tab */}
-      <TabsContent value="activity">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>Organisation events and actions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { action: 'Organization created', date: organization.createdAt, icon: Building2 },
-                { action: 'Last active', date: organization.lastActive, icon: Activity },
-                { action: 'Profile updated', date: organization.updatedAt, icon: Edit },
-                ...(organization.onboardingData?.completedAt ? [
-                  { action: 'Onboarding completed', date: organization.onboardingData.completedAt, icon: Settings }
-                ] : [])
-              ].map((item, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg transition-colors">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <item.icon className="h-4 w-4 text-primary" />
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Organisation events and actions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { action: 'Organization created', date: organization.createdAt, icon: Building2 },
+                  { action: 'Last active', date: organization.lastActive, icon: Activity },
+                  { action: 'Profile updated', date: organization.updatedAt, icon: Edit },
+                  ...(organization.onboardingData?.completedAt ? [
+                    { action: 'Onboarding completed', date: organization.onboardingData.completedAt, icon: Settings }
+                  ] : [])
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 hover:bg-muted/50 rounded-lg transition-colors">
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <item.icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{item.action}</p>
+                      <p className="text-sm text-muted-foreground">{formatDate(item.date)}</p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <p className="font-medium">{item.action}</p>
-                    <p className="text-sm text-muted-foreground">{formatDate(item.date)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-    </Tabs>
-    </div >
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+      <UpgradePlanDialog
+        isOpen={isUpgradeModalOpen}
+        onClose={() => setIsUpgradeModalOpen(false)}
+        organizationId={params.id!}
+        currentPlanId={organization?.plan?._id || organization?.subscription?.planSubs?.planId}
+        onSuccess={fetchOrganizationDetail}
+      />
+    </div>
   );
 };
 
