@@ -49,6 +49,55 @@ interface FeatureCardFormProps {
     errors?: Record<string, string>;
 }
 
+function ColorPickerWrapper({ value, onChange, label, placeholder }: { value: string, onChange: (val: string) => void, label: string, placeholder: string }) {
+    const hexMatches = value.match(/#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/g) || [];
+
+    const handlePickerChange = (index: number, newColor: string) => {
+        let i = 0;
+        const newValue = value.replace(/#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})/g, (match) => {
+            if (i === index) {
+                i++;
+                return newColor;
+            }
+            i++;
+            return match;
+        });
+        onChange(newValue);
+    };
+
+    return (
+        <div className="space-y-1">
+            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{label}</Label>
+            <div className="flex gap-1.5 items-center">
+                <Input
+                    value={value}
+                    onChange={(e) => onChange(e.target.value)}
+                    placeholder={placeholder}
+                    className="h-8 text-xs flex-1"
+                />
+                <div className="flex gap-1">
+                    {hexMatches.map((hex, idx) => (
+                        <div key={idx} className="relative w-6 h-6 rounded border dark:border-gray-700 overflow-hidden shrink-0 shadow-sm transition-transform hover:scale-110 active:scale-95">
+                            <input
+                                type="color"
+                                value={hex.length === 4 ? `#${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}` : hex}
+                                onChange={(e) => handlePickerChange(idx, e.target.value)}
+                                className="absolute -top-1 -left-1 w-8 h-8 cursor-pointer border-none p-0 bg-transparent"
+                                title="Pick color"
+                            />
+                        </div>
+                    ))}
+                    {hexMatches.length === 0 && (
+                        <div className="w-6 h-6 rounded border border-dashed flex items-center justify-center text-[8px] text-muted-foreground shrink-0 opacity-50">
+                            N/A
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function FeatureCardForm({ formData, setFormData, errors = {} }: FeatureCardFormProps) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [darkOpen, setDarkOpen] = useState(false);
@@ -252,15 +301,13 @@ export function FeatureCardForm({ formData, setFormData, errors = {} }: FeatureC
                 <h4 className="text-sm font-semibold text-foreground">Light Theme</h4>
                 <div className="grid grid-cols-2 gap-3">
                     {themeFields.map((f) => (
-                        <div key={f.key} className="space-y-1">
-                            <Label className="text-xs text-muted-foreground">{f.label}</Label>
-                            <Input
-                                value={formData[f.key] || ""}
-                                onChange={(e) => handleChange(f.key, e.target.value)}
-                                placeholder={f.placeholder}
-                                className="h-8 text-xs"
-                            />
-                        </div>
+                        <ColorPickerWrapper
+                            key={f.key}
+                            label={f.label}
+                            value={formData[f.key] || ""}
+                            onChange={(val) => handleChange(f.key, val)}
+                            placeholder={f.placeholder}
+                        />
                     ))}
                 </div>
             </div>
@@ -278,15 +325,13 @@ export function FeatureCardForm({ formData, setFormData, errors = {} }: FeatureC
                 {darkOpen && (
                     <div className="grid grid-cols-2 gap-3 animate-in slide-in-from-top-2">
                         {themeFields.map((f) => (
-                            <div key={`dark-${f.key}`} className="space-y-1">
-                                <Label className="text-xs text-muted-foreground">{f.label}</Label>
-                                <Input
-                                    value={formData.dark?.[f.key] || ""}
-                                    onChange={(e) => handleDarkChange(f.key, e.target.value)}
-                                    placeholder={f.placeholder}
-                                    className="h-8 text-xs"
-                                />
-                            </div>
+                            <ColorPickerWrapper
+                                key={`dark-${f.key}`}
+                                label={f.label}
+                                value={formData.dark?.[f.key] || ""}
+                                onChange={(val) => handleDarkChange(f.key, val)}
+                                placeholder={f.placeholder}
+                            />
                         ))}
                     </div>
                 )}
