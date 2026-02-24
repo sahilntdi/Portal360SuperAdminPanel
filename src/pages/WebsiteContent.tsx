@@ -252,9 +252,17 @@ export default function WebsiteContentPage() {
     try {
       const res = await WebsiteContentService.getFeatureSection();
       const data = res.data?.data || res.data || {};
-      setFeatureMeta(data.meta ? [data.meta] : data.metas || []);
-      setFeatureCards(data.cards || []);
-    } catch {
+
+      // The API returns the meta object directly in data, and cards in data.featureCards
+      if (data && data._id) {
+        setFeatureMeta([data]);
+        setFeatureCards(data.featureCards || []);
+      } else {
+        setFeatureMeta([]);
+        setFeatureCards([]);
+      }
+    } catch (error) {
+      console.error("Failed to load Features Section:", error);
       toast.error("Failed to load Features Section");
     }
   };
