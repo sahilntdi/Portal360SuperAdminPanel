@@ -40,7 +40,7 @@ export function OrganizationDialog({
       {!isEditMode && children && (
         <DialogTrigger asChild>{children}</DialogTrigger>
       )}
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditMode ? "Edit Organisation" : "Create New Organisation"}

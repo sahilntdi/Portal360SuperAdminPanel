@@ -718,7 +718,7 @@ const OrganizationDetailView = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Clients Range
+                        Clients
                       </label>
                       <div className="p-3 bg-muted/50 rounded-lg">
                         <span className="font-medium">

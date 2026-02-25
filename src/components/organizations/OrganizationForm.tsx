@@ -31,7 +31,11 @@ import {
   CreditCard,
   Users,
   Lock,
-  AlertCircle
+  AlertCircle,
+  MapPin,
+  LayoutGrid,
+  ArrowLeftRight,
+  CircleDollarSign
 } from "lucide-react";
 import OptionCard from "@/utils/OptionCard";
 import { usePricingPlans } from "@/ApiService/PricingPlans";
@@ -82,74 +86,31 @@ const organizationSchema = z.object({
     .max(100, "Practice name cannot exceed 100 characters")
     .regex(/^[a-zA-Z0-9\s\-'&.,]+$/, "Practice name contains invalid characters"),
 
-  // Step 5
+  // Step 5: Address
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  country: z.string().min(1, "Country is required"),
+  pinCode: z.string().min(1, "Pin code is required"),
+
+  // Step 6: Nature
   nature: z.array(z.string())
     .min(1, "Please select at least one business nature")
     .max(5, "You can select up to 5 business natures"),
 
-  // Step 6
-  structure: z.object({
-    partners: z.string()
-      .min(1, "Please select number of partners")
-      .refine(val => val === "Other" || PARTNER_BRACKETS.includes(val), {
-        message: "Invalid selection for partners"
-      }),
-    partnersOther: z.string()
-      .optional()
-      .refine(val => !val || (parseInt(val) >= 0 && parseInt(val) <= 1000), {
-        message: "Partners must be between 0 and 1000"
-      }),
-    admin: z.string()
-      .min(1, "Please select number of admin staff")
-      .refine(val => val === "Other" || ADMIN_BRACKETS.includes(val), {
-        message: "Invalid selection for admin staff"
-      }),
-    adminOther: z.string()
-      .optional()
-      .refine(val => !val || (parseInt(val) >= 0 && parseInt(val) <= 1000), {
-        message: "Admin staff must be between 0 and 1000"
-      }),
-    accountants: z.string()
-      .min(1, "Please select number of accountants")
-      .refine(val => val === "Other" || ACCOUNTANT_BRACKETS.includes(val), {
-        message: "Invalid selection for accountants"
-      }),
-    accountantsOther: z.string()
-      .optional()
-      .refine(val => !val || (parseInt(val) >= 0 && parseInt(val) <= 1000), {
-        message: "Accountants must be between 0 and 1000"
-      }),
-    clients: z.string()
-      .min(1, "Please select number of clients")
-      .refine(val => val === "Other" || CLIENT_BRACKETS.includes(val), {
-        message: "Invalid selection for clients"
-      }),
-    clientsOther: z.string()
-      .optional()
-      .refine(val => !val || (parseInt(val) >= 0 && parseInt(val) <= 10000), {
-        message: "Clients must be between 0 and 10,000"
-      }),
-  }).refine(data => {
-    // Validate that if "Other" is selected, the other field must be filled
-    if (data.partners === "Other" && (!data.partnersOther || data.partnersOther.trim() === "")) {
-      return false;
-    }
-    if (data.admin === "Other" && (!data.adminOther || data.adminOther.trim() === "")) {
-      return false;
-    }
-    if (data.accountants === "Other" && (!data.accountantsOther || data.accountantsOther.trim() === "")) {
-      return false;
-    }
-    if (data.clients === "Other" && (!data.clientsOther || data.clientsOther.trim() === "")) {
-      return false;
-    }
-    return true;
-  }, {
-    message: "Please provide a number when selecting 'Other'",
-    path: ["structure"]
-  }),
+  // Step 7: Structure (Flattened)
+  userCount: z.string()
+    .min(1, "Total number of users is required"),
+  partners: z.string()
+    .min(1, "Please enter number of partners"),
+  admin: z.string()
+    .min(1, "Please enter number of admin staff"),
+  accountants: z.string()
+    .min(1, "Please enter number of accountants"),
+  clients: z.string()
+    .min(1, "Please enter number of clients"),
 
-  // Step 7
+  // Step 8: Plan
   plan: z.string()
     .min(1, "Please select a plan")
     .regex(/^[a-fA-F0-9]{24}$/, "Invalid plan ID format"), // Assuming MongoDB ObjectId
@@ -162,7 +123,7 @@ const organizationSchema = z.object({
   clientsRange: z.string()
     .optional(),
 }).superRefine((data, ctx) => {
-  // Cross-field validation
+  // Cross-field validation for payment
   if (data.paymentOption === "alreadyPaid" && data.plan === "") {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -171,8 +132,19 @@ const organizationSchema = z.object({
     });
   }
 
-  // Validate that password is provided in add mode
-  // (This will be handled in the component logic)
+  // Calculation refinement (previously in structure refinement)
+  if (data.userCount && data.admin && data.accountants) {
+    const uc = parseInt(data.userCount) || 0;
+    const adm = parseInt(data.admin) || 0;
+    const acc = parseInt(data.accountants) || 0;
+    if (uc !== (adm + acc)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Total users must equal (Admin Staff + Accountants)",
+        path: ["userCount"]
+      });
+    }
+  }
 });
 
 type OrganizationFormValues = z.infer<typeof organizationSchema>;
@@ -183,11 +155,6 @@ const NATURE_OPTIONS = [
   { id: "marketing", label: "Marketing", comingSoon: true },
   { id: "legal", label: "Legal", comingSoon: true },
 ];
-
-const PARTNER_BRACKETS = ["None", "1-5", "6-11", "12-20", "21-30", "Other"];
-const ADMIN_BRACKETS = ["None", "1-5", "6-11", "12-20", "21-30", "Other"];
-const ACCOUNTANT_BRACKETS = ["None", "1-5", "6-11", "12-20", "21-30", "Other"];
-const CLIENT_BRACKETS = ["None", "1-10", "11-50", "51-100", "101-500", "Other"];
 
 interface OrganizationFormProps {
   initialData?: Organization | null;
@@ -257,17 +224,17 @@ export function OrganizationForm({
       password: "",
       businessName: initialData?.businessName || "",
       practiceName: initialData?.practiceName || "",
+      address: initialData?.onboardingData?.address || "",
+      city: initialData?.onboardingData?.city || "",
+      state: initialData?.onboardingData?.state || "",
+      country: initialData?.onboardingData?.country_address || "Australia",
+      pinCode: initialData?.onboardingData?.pinCode || "",
       nature: initialData?.onboardingData?.nature?.map(n => n.toLowerCase()) || [],
-      structure: {
-        partners: initialData?.onboardingData?.structure?.partners || "",
-        partnersOther: initialData?.onboardingData?.structure?.partnersOther?.toString() || "",
-        admin: initialData?.onboardingData?.structure?.admin || "",
-        adminOther: initialData?.onboardingData?.structure?.adminOther?.toString() || "",
-        accountants: initialData?.onboardingData?.structure?.accountants || "",
-        accountantsOther: initialData?.onboardingData?.structure?.accountantsOther?.toString() || "",
-        clients: initialData?.onboardingData?.structure?.clients || "",
-        clientsOther: initialData?.onboardingData?.structure?.clientsOther?.toString() || "",
-      },
+      userCount: initialData?.onboardingData?.structure?.userCount?.toString() || "",
+      partners: initialData?.onboardingData?.structure?.partners || "",
+      admin: initialData?.onboardingData?.structure?.admin || "",
+      accountants: initialData?.onboardingData?.structure?.accountants || "",
+      clients: initialData?.onboardingData?.structure?.clients || "",
       plan: initialData?.plan?._id || "",
       paymentOption: initialData?.isPaid ? "alreadyPaid" : "unpaid",
       clientsRange: initialData?.onboardingData?.clientsRange || "",
@@ -276,7 +243,6 @@ export function OrganizationForm({
 
   const watchEmail = form.watch("email");
   const watchNature = form.watch("nature");
-  const watchStructure = form.watch("structure");
   const watchPassword = form.watch("password");
   const watchBusinessName = form.watch("businessName");
   const watchPracticeName = form.watch("practiceName");
@@ -294,9 +260,10 @@ export function OrganizationForm({
         : ['firstName', 'lastName'],
       3: ['businessName'],
       4: ['practiceName'],
-      5: ['nature'],
-      6: ['structure'],
-      7: ['plan', 'paymentOption'],
+      5: ['address', 'city', 'state', 'country', 'pinCode'],
+      6: ['nature'],
+      7: ['userCount', 'partners', 'admin', 'accountants', 'clients'],
+      8: ['plan', 'paymentOption'],
     };
 
     const fields = fieldsToValidate[stepNumber];
@@ -336,75 +303,6 @@ export function OrganizationForm({
     setStepErrors(prev => ({ ...prev, [step]: [] }));
   };
 
-  const NumberGroup = ({
-    title,
-    field,
-    options
-  }: {
-    title: string;
-    field: keyof OrganizationFormValues['structure'];
-    options: string[];
-  }) => {
-    const value = watchStructure[field];
-    const error = form.formState.errors.structure?.[field];
-    const otherField = `${field}Other` as keyof OrganizationFormValues['structure'];
-    const otherError = form.formState.errors.structure?.[otherField];
-
-    return (
-      <div className="mt-4">
-        <div className="font-medium text-gray-800 mb-2 flex items-center justify-between">
-          <span>{title}</span>
-          {error && (
-            <span className="text-sm text-destructive flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" />
-              {error.message}
-            </span>
-          )}
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {options.map((b) => (
-            <div key={b}>
-              <button
-                type="button"
-                onClick={() => {
-                  form.setValue(`structure.${field}`, b, { shouldValidate: true });
-                  // Clear other field if not selecting "Other"
-                  if (b !== "Other") {
-                    form.setValue(`structure.${otherField}`, "", { shouldValidate: true });
-                  }
-                }}
-                className={`w-full p-3 rounded-lg border text-center transition-all ${value === b
-                  ? "border-primary bg-primary/10 text-primary font-medium"
-                  : "border-border hover:border-primary/50"
-                  }`}
-              >
-                {b}
-              </button>
-            </div>
-          ))}
-        </div>
-        {value === "Other" && (
-          <div className="mt-2" data-error={!!otherError}>
-            <Input
-              type="number"
-              min="0"
-              max={field === 'clients' ? "10000" : "1000"}
-              placeholder={`Enter number of ${title.toLowerCase()}`}
-              className={`w-full ${otherError ? 'border-destructive' : ''}`}
-              {...form.register(`structure.${otherField}`)}
-              onChange={(e) => {
-                const value = e.target.value;
-                form.setValue(`structure.${otherField}`, value, { shouldValidate: true });
-              }}
-            />
-            {otherError && (
-              <p className="text-sm text-destructive mt-1">{otherError.message}</p>
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
 
 
 
@@ -415,12 +313,15 @@ export function OrganizationForm({
     !form.getFieldState("firstName").error && !form.getFieldState("lastName").error;
   const canProceedToStep4 = form.watch("businessName") && !form.getFieldState("businessName").error;
   const canProceedToStep5 = form.watch("practiceName") && !form.getFieldState("practiceName").error;
-  const canProceedToStep6 = form.watch("nature").length > 0 && !form.getFieldState("nature").error;
-  const canProceedToStep7 = form.watch("structure.partners") &&
-    form.watch("structure.admin") &&
-    form.watch("structure.accountants") &&
-    form.watch("structure.clients") &&
-    !form.getFieldState("structure").error;
+  const canProceedToStep6 = form.watch("address") && form.watch("city") && form.watch("state") && form.watch("pinCode") && form.watch("country") && !form.getFieldState("address").error && !form.getFieldState("city").error && !form.getFieldState("state").error && !form.getFieldState("pinCode").error && !form.getFieldState("country").error;
+  const canProceedToStep7 = form.watch("nature").length > 0 && !form.getFieldState("nature").error;
+  const canProceedToStep8 = form.watch("userCount") &&
+    form.watch("partners") &&
+    form.watch("admin") &&
+    form.watch("accountants") &&
+    form.watch("clients") &&
+    !form.getFieldState("userCount").error; // userCount is top-level now
+
   // Validation status for each step
   const stepValidationStatus: { [key: number]: boolean } = {
     1: canProceedToStep2,
@@ -429,16 +330,16 @@ export function OrganizationForm({
     4: canProceedToStep5,
     5: canProceedToStep6,
     6: canProceedToStep7,
-    7: form.watch("plan") && form.watch("paymentOption") &&
-      !form.getFieldState("plan").error && !form.getFieldState("paymentOption").error,
+    7: canProceedToStep8,
+    8: !form.getFieldState("plan").error && !form.getFieldState("paymentOption").error,
   };
 
-  const finalStep = isEditMode ? 6 : 7;
+  const finalStep = isEditMode ? 7 : 8;
   const steps = Array.from({ length: finalStep }, (_, i) => i + 1);
 
   const canSubmit = isEditMode
-    ? stepValidationStatus[6] // In edit mode, if step 6 is valid, we can submit
-    : stepValidationStatus[7]; // In create mode, step 7 must be valid
+    ? stepValidationStatus[7] // In edit mode, if step 7 is valid, we can submit
+    : stepValidationStatus[8]; // In create mode, step 8 must be valid
 
   const handleSubmitForm = async (data: OrganizationFormValues) => {
     try {
@@ -449,11 +350,12 @@ export function OrganizationForm({
       const submissionData = isEditMode
         ? {
           ...data,
+          userCount: parseInt(data.userCount) || 0,
           plan: undefined,
           paymentOption: undefined,
           // Also remove other fields that are only relevant for initial setup
           password: undefined, // Password is not updated via this form in edit mode
-          clientsRange: data.clientsRange || data.structure.clients, // Keep clientsRange logic
+          clientsRange: data.clientsRange || data.clients, // Keep clientsRange logic
           businessNameChoice: data.businessName,
           practiceNameChoice: data.practiceName,
           ...(data.paymentOption === "alreadyPaid" && { alreadyPaid: true }),
@@ -461,9 +363,10 @@ export function OrganizationForm({
         }
         : {
           ...data,
+          userCount: parseInt(data.userCount) || 0,
           businessNameChoice: data.businessName,
           practiceNameChoice: data.practiceName,
-          clientsRange: data.clientsRange || data.structure.clients,
+          clientsRange: data.clientsRange || data.clients,
           ...(data.paymentOption === "alreadyPaid" && { alreadyPaid: true }),
           ...(data.paymentOption === "unpaid" && { unpaid: true }),
           paymentOption: undefined, // Remove paymentOption from the final payload
@@ -779,68 +682,82 @@ export function OrganizationForm({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                What is the nature of your business?
+                <MapPin className="h-5 w-5" />
+                Office Address
               </CardTitle>
-              <CardDescription>Select one.</CardDescription>
+              <CardDescription>
+                Provide the registration address for your practice.
+              </CardDescription>
             </CardHeader>
-            <CardContent data-error={!!form.formState.errors.nature}>
-              <div className="grid grid-cols-2 gap-3">
-                {NATURE_OPTIONS.map((o) => (
-                  <button
-                    key={o.id}
-                    type="button"
-                    onClick={() => {
-                      if (!o.comingSoon) {
-                        const currentNature = watchNature;
-                        let newNature;
-                        if (currentNature.includes(o.id)) {
-                          newNature = currentNature.filter(x => x !== o.id);
-                        } else {
-                          if (currentNature.length >= 5) {
-                            // Show error if trying to select more than 5
-                            form.setError("nature", {
-                              type: "max",
-                              message: "You can select up to 5 business natures"
-                            });
-                            return;
-                          }
-                          newNature = [...currentNature, o.id];
-                        }
-                        form.setValue("nature", newNature, { shouldValidate: true });
-                      }
-                    }}
-                    disabled={o.comingSoon}
-                    className={`p-4 rounded-lg border text-left relative transition-all ${watchNature.includes(o.id)
-                      ? 'border-primary bg-primary/10 shadow-sm'
-                      : 'border-border hover:border-primary/50'
-                      } ${o.comingSoon ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                  >
-                    <div className="font-medium text-sm">{o.label}</div>
-                    {watchNature.includes(o.id) && (
-                      <div className="absolute top-2 right-2">
-                        <Check className="h-4 w-4 text-primary" />
-                      </div>
-                    )}
-                    {o.comingSoon && (
-                      <Badge variant="outline" className="mt-1 text-xs">
-                        Coming soon
-                      </Badge>
-                    )}
-                  </button>
-                ))}
-              </div>
+            <CardContent className="space-y-4">
               <FormField
                 control={form.control}
-                name="nature"
+                name="address"
                 render={({ field }) => (
                   <FormItem>
+                    <FormLabel>Street Address</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter street address" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <div className="mt-2 text-sm text-muted-foreground">
-                Selected: {watchNature.length} of 5
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>City</FormLabel>
+                      <FormControl>
+                        <Input placeholder="City" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>State</FormLabel>
+                      <FormControl>
+                        <Input placeholder="State/Province" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="pinCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Post Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Post code" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Country</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Country" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
               {stepErrors[5]?.length > 0 && (
                 <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
@@ -863,19 +780,72 @@ export function OrganizationForm({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Structure of your practice
+                <LayoutGrid className="h-5 w-5" />
+                Nature of your business
               </CardTitle>
               <CardDescription>
-                Tell us about partners, admin staff and accountants.
+                Help us customize your workspace (Select up to 5).
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6" data-error={!!form.formState.errors.structure}>
-              <NumberGroup title="Partners" field="partners" options={PARTNER_BRACKETS} />
-              <NumberGroup title="Admin Staff" field="admin" options={ADMIN_BRACKETS} />
-              <NumberGroup title="Accountants" field="accountants" options={ACCOUNTANT_BRACKETS} />
-              <NumberGroup title="How many clients do you manage?" field="clients" options={CLIENT_BRACKETS} />
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {NATURE_OPTIONS.map((opt) => (
+                  <div
+                    key={opt.id}
+                    onClick={() => {
+                      if (opt.comingSoon) return;
+                      const current = form.getValues("nature") || [];
+                      const exists = current.includes(opt.id);
+                      if (exists) {
+                        form.setValue("nature", current.filter(id => id !== opt.id), { shouldValidate: true });
+                      } else if (current.length < 5) {
+                        form.setValue("nature", [...current, opt.id], { shouldValidate: true });
+                      }
+                    }}
+                    className={`relative p-4 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between group
+                      ${watchNature.includes(opt.id)
+                        ? "border-primary bg-primary/5 shadow-md"
+                        : "border-border hover:border-primary/30 bg-card hover:shadow-sm"
+                      }
+                      ${opt.comingSoon ? "opacity-60 cursor-not-allowed grayscale" : ""}
+                    `}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg transition-colors ${watchNature.includes(opt.id) ? "bg-primary text-white" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"}`}>
+                        {opt.id === 'accounting' && <Users className="h-4 w-4" />}
+                        {opt.id === 'conveyancing' && <ArrowLeftRight className="h-4 w-4" />}
+                        {opt.id === 'marketing' && <CircleDollarSign className="h-4 w-4" />}
+                        {opt.id === 'legal' && <Building2 className="h-4 w-4" />}
+                      </div>
+                      <span className={`font-semibold transition-colors ${watchNature.includes(opt.id) ? "text-primary" : "text-foreground"}`}>
+                        {opt.label}
+                      </span>
+                    </div>
 
+                    {watchNature.includes(opt.id) && (
+                      <div className="bg-primary text-white rounded-full p-1 animate-in zoom-in-50 duration-200">
+                        <Check className="h-3 w-3" />
+                      </div>
+                    )}
+
+                    {opt.comingSoon && (
+                      <Badge variant="secondary" className="text-[10px] py-0 px-2 uppercase font-bold tracking-wider">Soon</Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <FormField
+                control={form.control}
+                name="nature"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="mt-2 text-sm text-muted-foreground">
+                Selected: {watchNature.length} of 5
+              </div>
               {stepErrors[6]?.length > 0 && (
                 <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
                   <ul className="text-sm text-destructive space-y-1">
@@ -893,6 +863,127 @@ export function OrganizationForm({
         );
 
       case 7:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Structure of your practice
+              </CardTitle>
+              <CardDescription>
+                Tell us about partners, admin staff and accountants.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <FormField
+                control={form.control}
+                name="userCount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total no of User in your organisation</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Enter total number of users"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="partners"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Partners</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Number of partners"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="clients"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Clients</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Number of clients"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="admin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Admin Staff</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Number of admin staff"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="accountants"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Accountants</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="Number of accountants"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {stepErrors[7]?.length > 0 && (
+                <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <ul className="text-sm text-destructive space-y-1">
+                    {stepErrors[7].map((error, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <AlertCircle className="h-3 w-3" />
+                        {error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+
+      case 8:
         // Skip step 7 in edit mode if somehow reached
         if (isEditMode) return null;
 
