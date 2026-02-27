@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoreVertical, Building2, Users, CreditCard, Eye, Edit2, Trash2 } from "lucide-react";
+import { MoreVertical, Building2, Users, CreditCard, Eye, Edit2, Trash2, LogIn } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,7 @@ interface OrganizationTableProps {
   onEdit: (org: Organization) => void;
   onDelete: (org: Organization) => void;
   onStatusToggle: (id: string, status: string) => Promise<void>;
+  onImpersonate: (org: Organization) => void;
 }
 
 export function OrganizationTable({
@@ -31,7 +32,8 @@ export function OrganizationTable({
   onView,
   onEdit,
   onDelete,
-  onStatusToggle
+  onStatusToggle,
+  onImpersonate,
 }: OrganizationTableProps) {
   const getInitials = (name: string) => {
     return name
@@ -233,6 +235,10 @@ export function OrganizationTable({
                     <DropdownMenuItem onClick={() => onView(org)}>
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onImpersonate(org)}>
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Login as Tenant
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={() => onEdit(org)}>

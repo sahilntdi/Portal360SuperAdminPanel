@@ -14,6 +14,7 @@ import { RefreshCw, Loader2 } from "lucide-react";
 import { useOrganizations } from "@/ApiService/apiOrganizations";
 import { toast } from "sonner";
 import type { Organization } from "@/types/organizations";
+import { UserService } from "@/ApiService/apiUsers";
 
 const Organizations = () => {
   const navigate = useNavigate();
@@ -48,6 +49,18 @@ const Organizations = () => {
 
     return matchesSearch && matchesStatus && matchesPlan;
   });
+
+  const handleImpersonate = async (org: Organization) => {
+    try {
+      const { redirectUrl } = await UserService.impersonateTenant(org.email);
+      // ya agar hook use kar rahe: await impersonateTenant(org.email)
+
+      window.open(redirectUrl, "_blank");
+      // toast.success("Impersonating...")  optional
+    } catch (err: any) {
+      toast.error(err.message || "Failed to impersonate tenant");
+    }
+  };
 
   const activeFiltersCount = [
     statusFilter !== "all",
@@ -200,6 +213,7 @@ const Organizations = () => {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onStatusToggle={handleStatusChange}
+            onImpersonate={handleImpersonate}
           />
         </CardContent>
       </Card>

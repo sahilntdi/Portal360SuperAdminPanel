@@ -46,18 +46,6 @@ export function UserFilters({
             <SelectItem value="inactive">Inactive</SelectItem>
           </SelectContent>
         </Select>
-        
-        <Select value={roleFilter} onValueChange={onRoleFilterChange}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Role" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value="679f31947a4e717c2fcd0099">Admin</SelectItem>
-            <SelectItem value="679f31947a4e717c2fcd00a1">Accountant</SelectItem>
-            <SelectItem value="679f31947a4e717c2fcd00a2">Staff</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
     </div>
   );

@@ -115,8 +115,8 @@ export class UserService {
 
   // Toggle user status
   static async toggleUserStatus(id: string, status: boolean): Promise<User> {
-    const res = await instance.patch<ApiResponse<User>>(`/user/${id}/status`, { 
-      isActive: !status 
+    const res = await instance.patch<ApiResponse<User>>(`/user/${id}/status`, {
+      isActive: !status
     });
     if (res.data.success) {
       return res.data.data;
@@ -132,6 +132,23 @@ export class UserService {
     }
     throw new Error(res.data.message || "Failed to fetch organizations");
   }
+
+  static async impersonateTenant(email: string): Promise<{ redirectUrl: string }> {
+    try {
+      const res = await instance.post<ApiResponse<{ redirectUrl: string }>>(
+        `/tenant/impersonate/${email}`
+      );
+
+      if (res.data.success) {
+        return res.data.data;
+      }
+
+      throw new Error(res.data.message || "Impersonation failed");
+    } catch (err: any) {
+      console.error("Impersonate error:", err);
+      throw new Error(err.response?.data?.message || "Failed to impersonate tenant");
+    }
+  }
 }
 
 // React Hook for using users
@@ -142,6 +159,7 @@ export function useUsers() {
   const deleteUser = UserService.deleteUser;
   const toggleUserStatus = UserService.toggleUserStatus;
   const getOrganizations = UserService.getOrganizations;
+  const impersonateTenant = UserService.impersonateTenant;
 
   return {
     getUsers,
@@ -150,5 +168,6 @@ export function useUsers() {
     deleteUser,
     toggleUserStatus,
     getOrganizations,
+    impersonateTenant,
   };
 }

@@ -23,6 +23,7 @@ interface UseOrganizationsReturn {
   updateOrganization: (id: string, data: UpdateOrganizationData) => Promise<Organization>;
   deleteOrganization: (id: string) => Promise<void>;
   changeStatus: (id: string, status: string) => Promise<Organization>;
+  extendTrial: (email: string, additionalDays: number) => Promise<void>;
   getOrganizationById: (id: string) => Organization | undefined;
 }
 
@@ -193,6 +194,21 @@ export function useOrganizations(): UseOrganizationsReturn {
 
 
 
+  const extendTrial = async (email: string, additionalDays: number): Promise<void> => {
+    try {
+      const response = await instance.patch(`/tenant/${email}/extend-trial`, { additionalDays });
+
+      if (response.data.success) {
+        return;
+      }
+
+      throw new Error(response.data.message || "Failed to extend trial period");
+    } catch (err: any) {
+      const message = err.response?.data?.message || err.message || "Failed to extend trial period";
+      throw new Error(message);
+    }
+  };
+
   const getOrganizationById = (id: string): Organization | undefined => {
     return organizations.find(org => org._id === id);
   };
@@ -211,6 +227,7 @@ export function useOrganizations(): UseOrganizationsReturn {
     updateOrganization,
     deleteOrganization,
     changeStatus,
+    extendTrial,
     getOrganizationById
   };
 }
