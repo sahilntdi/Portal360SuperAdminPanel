@@ -17,8 +17,14 @@ export interface OrganizationOnboardingData {
   structure?: {
     type?: string;
     country?: string;
+    userCount?: number;
     [key: string]: any;
   };
+  address?: string;
+  city?: string;
+  state?: string;
+  pinCode?: string;
+  country_address?: string; // Using country_address to avoid conflict if necessary, or just country
   connectedEmail?: string;
   completedAt?: string;
 }
@@ -79,16 +85,22 @@ export interface CreateOrganizationData {
   practiceNameChoice: string;
   practiceNameOther?: string;
   nature: string[];
-  structure: {
-    partners: string;
-    partnersOther?: string;
-    admin: string;
-    adminOther?: string;
-    accountants: string;
-    accountantsOther?: string;
-    clients: string;
-    clientsOther?: string;
-  };
+  // Address fields
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  pinCode: string;
+  // Flattened structure fields
+  userCount: number;
+  partners: string;
+  partnersOther?: string;
+  admin: string;
+  adminOther?: string;
+  accountants: string;
+  accountantsOther?: string;
+  clients: string;
+  clientsOther?: string;
   plan: string;
   paymentOption: 'unpaid' | 'alreadyPaid';
   clientsRange?: string;

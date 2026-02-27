@@ -49,6 +49,7 @@ import instance from "@/utils/axios";
 import { Organization } from "../../ApiService/apiOrganizations";
 import { useTenantUsers } from "@/hooks/useTenantUsers";
 import UpgradePlanDialog from "./UpgradePlanDialog";
+import ExtendTrialDialog from "./ExtendTrialDialog";
 
 const OrganizationDetailView = () => {
   const params = useParams();
@@ -57,7 +58,7 @@ const OrganizationDetailView = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-
+  const [isExtendTrialModalOpen, setIsExtendTrialModalOpen] = useState(false);
 
   const location = window.location;
   const queryParams = new URLSearchParams(location.search);
@@ -584,15 +585,27 @@ const OrganizationDetailView = () => {
                   Manage subscription, billing, and plan details
                 </CardDescription>
               </div>
-              {organization.subscription && (
+
+              {/* Right side buttons wrapper */}
+              <div className="flex items-center gap-3">
                 <Button
-                  onClick={() => setIsUpgradeModalOpen(true)}
+                  onClick={() => setIsExtendTrialModalOpen(true)}
                   className="bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Upgrade Subscription
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Extend Trial
                 </Button>
-              )}
+
+                {organization.subscription && (
+                  <Button
+                    onClick={() => setIsUpgradeModalOpen(true)}
+                    className="bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Upgrade Subscription
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               {organization.subscription ? (
@@ -705,7 +718,7 @@ const OrganizationDetailView = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm font-medium text-muted-foreground mb-2 block">
-                        Clients Range
+                        Clients
                       </label>
                       <div className="p-3 bg-muted/50 rounded-lg">
                         <span className="font-medium">
@@ -916,6 +929,13 @@ const OrganizationDetailView = () => {
         onClose={() => setIsUpgradeModalOpen(false)}
         organizationId={params.id!}
         currentPlanId={organization?.plan?._id || organization?.subscription?.planSubs?.planId}
+        onSuccess={fetchOrganizationDetail}
+      />
+      <ExtendTrialDialog
+        isOpen={isExtendTrialModalOpen}
+        onOpenChange={setIsExtendTrialModalOpen}
+        organizationEmail={organization.email}
+        organizationName={organization.businessName}
         onSuccess={fetchOrganizationDetail}
       />
     </div>
