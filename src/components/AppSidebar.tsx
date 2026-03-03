@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
 import {
   LayoutDashboard,
   Building2,
@@ -37,6 +38,8 @@ import {
 import { useTheme } from "next-themes";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { logout } from "@/store/slices/authSlice";
+import { Dialog, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 // MENU ITEMS
 const menuItems = [
@@ -72,7 +75,8 @@ export function AppSidebar() {
   const { open, toggleSidebar } = useSidebar();
   const collapsed = !open;
   const { pathname } = useLocation();
-const { theme } = useTheme();
+  const { theme } = useTheme();
+  const [emailTriggerNoticeOpen, setEmailTriggerNoticeOpen] = useState(false);
   return (
     <motion.div
       initial={false}
@@ -165,6 +169,12 @@ const { theme } = useTheme();
                         <NavLink
                           to={item.url}
                           end={item.end}
+                          onClick={(e) => {
+                            if (item.url === "/email-triggers") {
+                              e.preventDefault();
+                              setEmailTriggerNoticeOpen(true);
+                            }
+                          }}
                           className={getNavCls(isActive, collapsed)}
                         >
                           <item.icon className="h-4 w-4 flex-shrink-0" />
@@ -243,6 +253,31 @@ const { theme } = useTheme();
           <LogOut className="h-4 w-4 text-sidebar-foreground/60 group-hover:text-red-500 transition" />
         )}
       </motion.div>
+
+      <Dialog open={emailTriggerNoticeOpen} onOpenChange={setEmailTriggerNoticeOpen}>
+        <DialogPortal>
+          <DialogOverlay
+            className={cn(
+              "bg-transparent backdrop-blur-sm top-0 right-0 bottom-0",
+              collapsed ? "left-[72px]" : "left-[256px]"
+            )}
+          />
+          <DialogPrimitive.Content
+            className="fixed left-1/2 top-1/2 z-50 w-[92vw] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-background/80 p-6 shadow-lg backdrop-blur supports-[backdrop-filter]:bg-background/60"
+          >
+            <div className="space-y-4">
+              <div className="text-center">
+                <p className="text-base font-medium">Email Trigger is not functional yet.</p>
+              </div>
+              <div className="flex justify-center">
+                <DialogPrimitive.Close asChild>
+                  <Button variant="default">Close</Button>
+                </DialogPrimitive.Close>
+              </div>
+            </div>
+          </DialogPrimitive.Content>
+        </DialogPortal>
+      </Dialog>
 
     </motion.div>
   );

@@ -133,14 +133,6 @@ export function HeroTable({ items, onEdit, onDelete, onToggleStatus }) {
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(hero)}
-                      className="h-8 w-8 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
                   </div>
                 </TableCell>
               </TableRow>

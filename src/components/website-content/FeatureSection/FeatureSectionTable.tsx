@@ -81,14 +81,7 @@ export function FeatureSectionTable({
                                                 >
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => onDeleteMeta(item)}
-                                                    className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-700 dark:hover:text-red-300"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                                
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -175,14 +168,7 @@ export function FeatureSectionTable({
                                                 >
                                                     <Pencil className="h-4 w-4" />
                                                 </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    onClick={() => onDeleteCard(item)}
-                                                    className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900 hover:text-red-700 dark:hover:text-red-300"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
+                                             
                                             </div>
                                         </TableCell>
                                     </TableRow>
