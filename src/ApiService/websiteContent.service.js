@@ -216,4 +216,9 @@ export const WebsiteContentService = {
 
   deleteIntegration: (id) => instance.delete(`integrations/${id}`),
 
+  /* -------------------- SEO META SETTINGS -------------------- */
+  getSEOStats: () => instance.get("index-meta-landing-page/admin/all"),
+  updateSEOMeta: (id, payload) => instance.patch(`index-meta-landing-page/${id}`, payload),
+  createSEOMeta: (payload) => instance.post("index-meta-landing-page", payload),
+  getPublicSEOMeta: () => instance.get("index-meta-landing-page"),
 };

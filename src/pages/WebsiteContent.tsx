@@ -123,6 +123,9 @@ export default function WebsiteContentPage() {
   const [heroes, setHeroes] = useState([]);
   const [featureMeta, setFeatureMeta] = useState([]);
   const [featureCards, setFeatureCards] = useState([]);
+  const [seoMeta, setSeoMeta] = useState(null);
+  const [websiteTitle, setWebsiteTitle] = useState("");
+  const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
   // Dialog states
   const [addStepOpen, setAddStepOpen] = useState(false);
   const [editStepOpen, setEditStepOpen] = useState(false);
@@ -264,6 +267,20 @@ export default function WebsiteContentPage() {
     } catch (error) {
       console.error("Failed to load Features Section:", error);
       toast.error("Failed to load Features Section");
+    }
+  };
+
+  const loadWebsiteSettings = async () => {
+    try {
+      const res = await WebsiteContentService.getSEOStats();
+      const metas = res.data?.data || [];
+      const activeMeta = metas.find(m => m.isActive) || metas[0];
+      if (activeMeta) {
+        setSeoMeta(activeMeta);
+        setWebsiteTitle(activeMeta.title);
+      }
+    } catch (error) {
+      console.error("Failed to load SEO Settings:", error);
     }
   };
 
@@ -845,6 +862,34 @@ export default function WebsiteContentPage() {
     }
   };
 
+  const handleUpdateWebsiteTitle = async () => {
+    if (!websiteTitle.trim()) {
+      toast.error("Title cannot be empty");
+      return;
+    }
+
+    setIsUpdatingTitle(true);
+    try {
+      if (seoMeta?._id) {
+        await WebsiteContentService.updateSEOMeta(seoMeta._id, {
+          title: websiteTitle
+        });
+      } else {
+        await WebsiteContentService.createSEOMeta({
+          title: websiteTitle,
+          isActive: true
+        });
+      }
+      toast.success("Website title updated successfully");
+      loadWebsiteSettings();
+    } catch (error) {
+      console.error("Failed to update website title:", error);
+      toast.error("Failed to update website title");
+    } finally {
+      setIsUpdatingTitle(false);
+    }
+  };
+
 
   // Load all data on mount
   useEffect(() => {
@@ -857,6 +902,7 @@ export default function WebsiteContentPage() {
     loadIntegrations();
     loadHeroes();
     loadFeatureSection();
+    loadWebsiteSettings();
   }, []);
 
   // Get stats for the active tab
@@ -1102,6 +1148,39 @@ export default function WebsiteContentPage() {
             </div>
           </div>
         );
+      case "general":
+        return (
+          <div className="max-w-2xl mx-auto space-y-6 py-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>General Settings</CardTitle>
+                <CardDescription>Manage global website configuration like title and SEO meta tags.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="website_title" className="text-sm font-medium">Website Title</label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="website_title"
+                      value={websiteTitle}
+                      onChange={(e) => setWebsiteTitle(e.target.value)}
+                      placeholder="Enter website title..."
+                    />
+                    <Button
+                      onClick={handleUpdateWebsiteTitle}
+                      disabled={isUpdatingTitle}
+                    >
+                      {isUpdatingTitle ? "Updating..." : "Update"}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    This title will appear in the browser tab and search engine results.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
       default:
         return null;
     }
@@ -1288,6 +1367,17 @@ export default function WebsiteContentPage() {
                       </span>
                     </TabsTrigger>
 
+                    {/* General Settings */}
+                    <TabsTrigger
+                      value="general"
+                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
+                    >
+                      <span className="flex items-center gap-1.5 whitespace-nowrap">
+                        <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+                        <span>General</span>
+                      </span>
+                    </TabsTrigger>
+
                   </div>
                 </TabsList>
               </ScrollArea>
@@ -1333,7 +1423,7 @@ export default function WebsiteContentPage() {
                         case "featureSection": setAddFeatureMetaOpen(true); break;
                       }
                     }}
-                    className="gap-2 w-full sm:w-auto"
+                    className={`gap-2 w-full sm:w-auto ${activeTab === "general" ? "hidden" : ""}`}
                     size={isMobile ? "default" : "default"}
                   >
                     <PlusCircle className="h-4 w-4" />
