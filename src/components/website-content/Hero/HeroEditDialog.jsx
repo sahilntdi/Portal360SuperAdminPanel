@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { HeroForm } from "./HeroForm";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 
 export function HeroEditDialog({ open, onClose, item, onSubmit }) {
@@ -71,18 +70,18 @@ export function HeroEditDialog({ open, onClose, item, onSubmit }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[90vh] p-0 overflow-hidden flex flex-col">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="text-xl font-bold">Edit Hero Section</DialogTitle>
+        <DialogHeader className="px-4 py-3 sm:px-6 sm:pb-2">
+          <DialogTitle className="text-base sm:text-xl font-bold">Edit Hero Section</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6 overflow-x-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-3 sm:px-6">
           <HeroForm formData={formData} setFormData={setFormData} isEditing={true} />
-        </ScrollArea>
+        </div>
 
-        <DialogFooter className="p-6 pt-2 border-t bg-muted/20">
-          <div className="flex justify-end gap-2 w-full">
-            <Button variant="ghost" onClick={onClose}>Cancel</Button>
-            <Button onClick={handleSubmit} className="px-8">Save Changes</Button>
+        <DialogFooter className="px-4 py-3 sm:p-6 sm:pt-2 border-t bg-muted/20">
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 w-full">
+            <Button variant="ghost" onClick={onClose} className="w-full sm:w-auto">Cancel</Button>
+            <Button onClick={handleSubmit} className="w-full sm:w-auto sm:px-8">Save Changes</Button>
           </div>
         </DialogFooter>
       </DialogContent>

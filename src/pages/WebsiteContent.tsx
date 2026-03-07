@@ -1257,130 +1257,129 @@ export default function WebsiteContentPage() {
               localStorage.setItem("websiteContentActiveTab", value);
             }} className="space-y-4 sm:space-y-6">
               {/* Tabs Navigation - Responsive */}
-              <ScrollArea className="w-full">
-                <TabsList className="inline-flex w-auto h-auto bg-muted/30 p-1 rounded-lg">
-                  <div className="flex space-x-1 overflow-x-auto pb-1">
+              {/* Tabs Navigation - Responsive horizontal scroll */}
+              <div className="w-full overflow-x-auto pb-1 -mx-1 px-1 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <TabsList className="flex w-max h-auto bg-muted/30 p-1 rounded-lg gap-1">
 
-                    {/* Hero */}
-                    <TabsTrigger
-                      value="heroes"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
-                    >
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <div className="w-2 h-2 rounded-full bg-teal-500"></div>
-                        <span className="hidden sm:inline">Hero Sections</span>
-                        <span className="sm:hidden">Hero</span>
-                      </span>
-                    </TabsTrigger>
+                  {/* Hero */}
+                  <TabsTrigger
+                    value="heroes"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-teal-500"></div>
+                      <span className="hidden sm:inline">Hero Sections</span>
+                      <span className="sm:hidden">Hero</span>
+                    </span>
+                  </TabsTrigger>
 
-                    {/* Feature Section */}
-                    <TabsTrigger
-                      value="featureSection"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
-                    >
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
-                        <span className="hidden sm:inline">Features Section</span>
-                        <span className="sm:hidden">Features</span>
-                      </span>
-                    </TabsTrigger>
+                  {/* Feature Section */}
+                  <TabsTrigger
+                    value="featureSection"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
+                      <span className="hidden sm:inline">Features Section</span>
+                      <span className="sm:hidden">Features</span>
+                    </span>
+                  </TabsTrigger>
 
-                    {/* How It Works */}
-                    <TabsTrigger
-                      value="steps"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
-                    >
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                        <span className="hidden sm:inline">How It Works</span>
-                        <span className="sm:hidden">Steps</span>
-                      </span>
-                    </TabsTrigger>
+                  {/* How It Works */}
+                  <TabsTrigger
+                    value="steps"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                      <span className="hidden sm:inline">How It Works</span>
+                      <span className="sm:hidden">Steps</span>
+                    </span>
+                  </TabsTrigger>
 
-                    {/* Integrations */}
-                    <TabsTrigger
-                      value="integrations"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
-                    >
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                        <span className="hidden sm:inline">Integrations</span>
-                        <span className="sm:hidden">Apps</span>
-                      </span>
-                    </TabsTrigger>
+                  {/* Integrations */}
+                  <TabsTrigger
+                    value="integrations"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                      <span className="hidden sm:inline">Integrations</span>
+                      <span className="sm:hidden">Apps</span>
+                    </span>
+                  </TabsTrigger>
 
-                    {/* Testimonials */}
-                    <TabsTrigger
-                      value="testimonials"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
-                    >
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                        <span className="hidden sm:inline">Testimonials</span>
-                        <span className="sm:hidden">Reviews</span>
-                      </span>
-                    </TabsTrigger>
+                  {/* Testimonials */}
+                  <TabsTrigger
+                    value="testimonials"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                      <span className="hidden sm:inline">Testimonials</span>
+                      <span className="sm:hidden">Reviews</span>
+                    </span>
+                  </TabsTrigger>
 
-                    {/* FAQ */}
-                    <TabsTrigger
-                      value="faq"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
-                    >
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                        <span>FAQ</span>
-                      </span>
-                    </TabsTrigger>
+                  {/* FAQ */}
+                  <TabsTrigger
+                    value="faq"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      <span>FAQ</span>
+                    </span>
+                  </TabsTrigger>
 
-                    {/* Blogs */}
-                    <TabsTrigger
-                      value="blogs"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
-                    >
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                        <span>Blogs</span>
-                      </span>
-                    </TabsTrigger>
+                  {/* Blogs */}
+                  <TabsTrigger
+                    value="blogs"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-amber-500"></div>
+                      <span>Blogs</span>
+                    </span>
+                  </TabsTrigger>
 
-                    {/* Modern Teams */}
-                    <TabsTrigger
-                      value="modernTeams"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
-                    >
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <div className="w-2 h-2 rounded-full bg-pink-500"></div>
-                        <span className="hidden sm:inline">Modern Teams</span>
-                        <span className="sm:hidden">Teams</span>
-                      </span>
-                    </TabsTrigger>
+                  {/* Modern Teams */}
+                  <TabsTrigger
+                    value="modernTeams"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-pink-500"></div>
+                      <span className="hidden sm:inline">Modern Teams</span>
+                      <span className="sm:hidden">Teams</span>
+                    </span>
+                  </TabsTrigger>
 
-                    {/* Superadmin */}
-                    <TabsTrigger
-                      value="superadmin"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
-                    >
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                        <span className="hidden sm:inline">Superadmin</span>
-                        <span className="sm:hidden">Admin</span>
-                      </span>
-                    </TabsTrigger>
+                  {/* Superadmin */}
+                  <TabsTrigger
+                    value="superadmin"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                      <span className="hidden sm:inline">Superadmin</span>
+                      <span className="sm:hidden">Admin</span>
+                    </span>
+                  </TabsTrigger>
 
-                    {/* General Settings */}
-                    <TabsTrigger
-                      value="general"
-                      className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm min-w-[auto]"
-                    >
-                      <span className="flex items-center gap-1.5 whitespace-nowrap">
-                        <div className="w-2 h-2 rounded-full bg-gray-500"></div>
-                        <span>General</span>
-                      </span>
-                    </TabsTrigger>
+                  {/* General Settings */}
+                  <TabsTrigger
+                    value="general"
+                    className="data-[state=active]:bg-background data-[state=active]:shadow-sm px-3 py-2 text-sm whitespace-nowrap"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <div className="w-2 h-2 rounded-full bg-gray-500"></div>
+                      <span>General</span>
+                    </span>
+                  </TabsTrigger>
 
-                  </div>
                 </TabsList>
-              </ScrollArea>
+              </div>
 
               {/* Tab Contents - Responsive */}
               <TabsContent value={activeTab} className="space-y-4 sm:space-y-6 mt-0">
